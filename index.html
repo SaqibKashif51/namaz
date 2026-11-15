@@ -38,6 +38,8 @@ button:active{transform:scale(.96);opacity:.65}
 @keyframes bob{0%,100%{transform:translateY(1px)}50%{transform:translateY(-3px)}}
 @keyframes drain{from{transform:scaleX(1)}to{transform:scaleX(0)}}
 .drain{height:2px;margin:2px 28px 0;background:var(--dim);transform-origin:center;animation:drain 5s linear forwards;border-radius:1px}
+@keyframes hpop{0%{transform:scale(1)}40%{transform:scale(1.35)}100%{transform:scale(1)}}
+.hpop{animation:hpop .45s cubic-bezier(.3,1.5,.5,1)}
 .mrow{display:flex;justify-content:space-between;align-items:center;align-self:stretch;margin:0 -12px}
 .ic{width:44px;height:44px;display:flex;align-items:center;justify-content:center;color:var(--mute)}
 .doto{font-family:'Doto','JetBrains Mono',monospace;font-weight:900}
@@ -151,28 +153,151 @@ const PT = (() => {
   }
   return { times };
 })();
+// Reminder library. Quran rows: [ref, score, tags, roman urdu]. Arabic is fetched by reference from api.alquran.cloud and cached.
+// Tags: sal=salah/zikr sab=sabr taw=tawakkul dua riz=rizq/work shk=shukr dis=effort/discipline akh=akhlaq mar=marriage mer=mercy/hope akr=akhirah sty=story
+const LIBQ=[
+['2:153',10,'sal sab','Aye imaan walo! Sabr aur namaz se madad lo. Beshak Allah sabr karne walon ke saath hai.'],
+['2:43',10,'sal','Namaz qaim karo, zakat do, aur ruku karne walon ke saath ruku karo.'],
+['20:14',10,'sal','Beshak main hi Allah hoon, mere siwa koi mabood nahi. To meri ibadat karo aur meri yaad ke liye namaz qaim karo.'],
+['2:238',9,'sal','Sab namazon ki hifazat karo, khaas kar darmiyani namaz ki, aur Allah ke samne adab se khare raho.'],
+['2:45',9,'sal sab','Sabr aur namaz se madad lo. Aur yeh bhari hai, magar aajizi karne walon par nahi.'],
+['14:40',9,'sal dua','Aye mere Rab! Mujhe namaz qaim karne wala bana, aur meri aulad ko bhi. Aye hamare Rab! Meri dua qubool farma.'],
+['23:1',8,'sal dis','Yaqeenan imaan wale kamyab ho gaye.'],
+['87:14',8,'dis sal','Beshak woh kamyab hua jisne apne aap ko paak kiya.'],
+['87:15',9,'sal','Aur apne Rab ka naam yaad kiya, phir namaz parhi.'],
+['108:2',8,'sal','To apne Rab ke liye namaz parho aur qurbani karo.'],
+['96:19',8,'sal','Hargiz nahi! Uski baat na mano. Sajda karo aur qareeb ho jao.'],
+['11:114',9,'sal mer','Din ke dono kinaron par aur raat ke kuch hisson mein namaz qaim karo. Beshak nekiyan buraiyon ko mita deti hain. Yeh naseehat hai yaad rakhne walon ke liye.'],
+['17:78',8,'sal','Suraj dhalne se raat ke andhere tak namaz qaim karo, aur Fajr ka Quran bhi. Beshak Fajr ka Quran hazir kiya jata hai.'],
+['20:132',9,'sal riz','Apne ghar walon ko namaz ka hukm do aur khud bhi us par jame raho. Hum tumse rizq nahi mangte, rizq to hum tumhein dete hain. Aur acha anjaam taqwa ka hai.'],
+['62:9',8,'sal riz','Aye imaan walo! Jab Jumme ke din namaz ke liye pukara jaye to Allah ke zikr ki taraf daudo aur khareed-o-farokht chhor do. Yeh tumhare liye behtar hai agar tum jaano.'],
+['62:10',10,'riz sal','Phir jab namaz poori ho jaye to zameen mein phail jao aur Allah ka fazl talaash karo, aur Allah ko bohat yaad karo taake tum kamyab ho.'],
+['63:9',9,'riz sal','Aye imaan walo! Tumhare maal aur tumhari aulad tumhein Allah ki yaad se ghafil na kar dein. Aur jo aisa kare, wohi nuqsan uthane wale hain.'],
+['13:28',10,'sal mer','Jo imaan laye aur jinke dil Allah ki yaad se itminan pate hain. Sun lo! Allah ki yaad hi se dilon ko itminan milta hai.'],
+['33:41',8,'sal','Aye imaan walo! Allah ko bohat zyada yaad karo.'],
+['2:152',9,'sal shk','To tum mujhe yaad karo, main tumhein yaad karunga. Mera shukr karo aur nashukri na karo.'],
+['94:5',9,'sab mer','To beshak mushkil ke saath aasani hai.'],
+['94:6',9,'sab mer','Beshak mushkil ke saath aasani hai.'],
+['65:3',10,'taw riz','Aur usay wahan se rizq deta hai jahan se usay gumaan bhi na ho. Jo Allah par bharosa kare, woh usay kaafi hai. Allah apna kaam poora kar ke rehta hai. Allah ne har cheez ka ek andaza muqarrar kiya hai.'],
+['65:7',8,'riz sab','Wusat wala apni wusat ke mutabiq kharch kare, aur jiska rizq tang ho woh us mein se kharch kare jo Allah ne usay diya. Allah kisi par us se zyada bojh nahi dalta jitna usay diya. Allah tangi ke baad aasani kar dega.'],
+['3:139',9,'sab','Na himmat haro aur na gham karo. Tum hi ghalib rahoge agar tum imaan wale ho.'],
+['39:53',9,'mer','Keh do: Aye mere bando jinhon ne apni jaano par zyadti ki! Allah ki rehmat se mayoos na ho. Beshak Allah sab gunah maaf kar deta hai. Wohi bakhshne wala, meherban hai.'],
+['93:3',8,'mer','Tumhare Rab ne na tumhein chhora aur na woh naraz hua.'],
+['93:4',7,'akr mer','Aur yaqeenan baad wali haalat tumhare liye pehli se behtar hai.'],
+['93:5',9,'mer','Aur anqareeb tumhara Rab tumhein itna dega ke tum khush ho jaoge.'],
+['2:155',7,'sab','Hum tumhein zaroor aazmayenge kuch khauf, bhook, aur maal, jaan aur phalon ki kami se. Aur sabr karne walon ko khushkhabri de do.'],
+['2:156',8,'sab','Woh jo musibat aane par kehte hain: Hum Allah hi ke hain aur usi ki taraf laut kar jana hai.'],
+['3:200',8,'sab dis','Aye imaan walo! Sabr karo, sabr mein muqabla karo, date raho, aur Allah se daro taake tum kamyab ho.'],
+['16:127',7,'sab','Sabr karo, aur tumhara sabr Allah hi ki madad se hai. Un par gham na karo aur unki chaalon se tang dil na ho.'],
+['70:5',8,'sab','To khoobsurat sabr karo.'],
+['103:2',9,'dis akr','Beshak insaan khasare mein hai.'],
+['9:51',9,'taw','Keh do: Hamein wohi pohanchega jo Allah ne hamare liye likh diya. Wohi hamara maula hai. Aur imaan walon ko Allah hi par bharosa karna chahiye.'],
+['3:160',9,'taw','Agar Allah tumhari madad kare to koi tum par ghalib nahi aa sakta. Aur agar woh tumhein chhor de to uske baad kaun tumhari madad karega? Imaan walon ko Allah hi par bharosa karna chahiye.'],
+['64:11',8,'taw sab','Koi musibat Allah ke hukm ke baghair nahi aati. Aur jo Allah par imaan laye, woh uske dil ko hidayat deta hai. Allah har cheez janta hai.'],
+['40:60',9,'dua','Tumhare Rab ne kaha: Mujhse dua karo, main tumhari dua qubool karunga. Jo meri ibadat se takabbur karte hain woh zaleel ho kar jahannam mein dakhil honge.'],
+['2:186',10,'dua','Jab mere bande tumse mere bare mein poochein to main qareeb hoon. Pukarne wale ki pukar ka jawab deta hoon jab woh mujhe pukare. To woh mera hukm manein aur mujh par imaan laein taake hidayat payein.'],
+['50:16',8,'taw','Humne insaan ko paida kiya aur hum jaante hain jo waswase uska nafs dalta hai. Aur hum uski shah-rag se bhi zyada uske qareeb hain.'],
+['40:44',8,'taw','Jo main tumse keh raha hoon tum usay yaad karoge. Main apna maamla Allah ke supurd karta hoon. Beshak Allah bandon ko dekh raha hai.'],
+['2:201',9,'dua','Aur un mein se kuch kehte hain: Aye hamare Rab! Hamein duniya mein bhi bhalai de aur aakhirat mein bhi bhalai de, aur hamein aag ke azaab se bacha.'],
+['20:114',9,'dua dis','Allah bohat buland hai, sacha badshah. Quran mein jaldi na karo jab tak uski wahi poori na ho jaye. Aur kaho: Aye mere Rab! Mere ilm mein izafa farma.'],
+['20:25',8,'dua','Kaha: Aye mere Rab! Mera seena khol de.'],
+['20:26',8,'dua riz','Aur mera kaam mere liye aasan kar de.'],
+['25:74',9,'dua mar','Aur woh jo kehte hain: Aye hamare Rab! Hamein hamari biwiyon aur aulad se aankhon ki thandak ata farma, aur hamein parhezgaron ka imam bana.'],
+['3:8',8,'dua','Aye hamare Rab! Hidayat dene ke baad hamare dilon ko terha na kar, aur hamein apne paas se rehmat ata farma. Beshak tu hi bohat ata karne wala hai.'],
+['17:80',8,'dua riz','Aur kaho: Aye mere Rab! Mujhe sachai ke saath dakhil kar aur sachai ke saath nikaal, aur apni taraf se mujhe madadgar quwwat ata farma.'],
+['23:118',8,'dua mer','Aur kaho: Aye mere Rab! Bakhsh de aur reham farma, aur tu sab se behtar reham karne wala hai.'],
+['28:24',8,'dua riz mar','To usne un dono ke janwaron ko pani pilaya, phir saaye ki taraf hat gaya aur kaha: Aye mere Rab! Jo bhalai bhi tu meri taraf utaare, main uska mohtaj hoon.'],
+['21:87',7,'dua sab','Aur machhli wale ko yaad karo, jab woh ghusse mein chala gaya aur samjha ke hum us par tangi nahi karenge. Phir usne andheron mein pukara: Tere siwa koi mabood nahi, tu paak hai, beshak main hi zalimon mein se tha.'],
+['21:89',8,'dua mar','Aur Zakariya ko yaad karo, jab usne apne Rab ko pukara: Aye mere Rab! Mujhe akela na chhor, aur tu sab se behtar waris hai.'],
+['7:23',8,'dua mer','Dono ne kaha: Aye hamare Rab! Humne apni jaano par zulm kiya. Agar tu ne hamein na bakhsha aur hum par reham na kiya to hum zaroor nuqsan uthane walon mein se honge.'],
+['53:39',10,'dis riz','Aur yeh ke insaan ke liye wohi hai jiski usne koshish ki.'],
+['53:40',9,'dis','Aur yeh ke uski koshish anqareeb dekhi jayegi.'],
+['11:6',8,'riz taw','Zameen par chalne wala koi jaandaar aisa nahi jiska rizq Allah ke zimme na ho. Woh uske thehrne ki jagah aur saunpe jane ki jagah janta hai. Sab kuch ek wazeh kitab mein hai.'],
+['83:1',8,'riz akh','Tabahi hai naap tol mein kami karne walon ke liye.'],
+['55:9',9,'riz akh','Insaaf ke saath wazan theek rakho aur tol mein kami na karo.'],
+['17:35',9,'riz akh','Jab naapo to poora naapo, aur seedhi tarazu se tolo. Yeh behtar hai aur anjaam ke lihaaz se bhi acha hai.'],
+['2:276',8,'riz','Allah sood ko mitata hai aur sadqaat ko barhata hai. Aur Allah kisi nashukre gunahgar ko pasand nahi karta.'],
+['2:245',8,'riz','Kaun hai jo Allah ko acha qarz de, phir Allah usay kai guna barha kar de? Allah hi tangi aur kushadgi deta hai, aur usi ki taraf tum lautaye jaoge.'],
+['14:7',10,'shk riz','Aur jab tumhare Rab ne elaan kiya: Agar tum shukr karoge to main tumhein aur zyada dunga. Aur agar nashukri karoge to mera azaab bohat sakht hai.'],
+['102:1',9,'riz akr','Zyada se zyada hasil karne ki hirs ne tumhein ghafil kar diya.'],
+['102:8',8,'akr shk','Phir us din tumse nematon ke bare mein zaroor poocha jayega.'],
+['3:92',8,'riz','Tum neki ko hargiz nahi pa sakte jab tak apni pasandeeda cheezon mein se kharch na karo. Aur jo kuch tum kharch karoge, Allah usay janta hai.'],
+['18:46',9,'riz akr','Maal aur aulad duniya ki zindagi ki zeenat hain. Aur baqi rehne wali nekiyan tumhare Rab ke nazdeek sawab aur umeed ke lihaaz se behtar hain.'],
+['29:69',10,'dis','Aur jo hamari raah mein koshish karte hain, hum unhein zaroor apne raaste dikhayenge. Beshak Allah neki karne walon ke saath hai.'],
+['91:9',9,'dis','Yaqeenan woh kamyab hua jisne apne nafs ko paak kiya.'],
+['91:10',8,'dis','Aur woh nakaam hua jisne usay dabaa diya.'],
+['79:40',8,'dis akr','Aur jo apne Rab ke samne khare hone se dara aur nafs ko khwahish se roka,'],
+['79:41',8,'akr','To beshak jannat hi uska thikana hai.'],
+['59:18',10,'dis akr','Aye imaan walo! Allah se daro, aur har shakhs dekhe ke usne kal ke liye kya aage bheja. Allah se daro, beshak Allah tumhare aamaal se bakhabar hai.'],
+['59:19',9,'dis','Un logon ki tarah na ho jao jinhon ne Allah ko bhula diya to Allah ne unhein khud apna aap bhula diya. Wohi nafarman hain.'],
+['67:2',9,'dis akr','Jisne maut aur zindagi ko paida kiya taake tumhein aazmaye ke tum mein se kaun amal mein sab se acha hai. Aur woh ghalib, bakhshne wala hai.'],
+['18:7',8,'dis akr','Jo kuch zameen par hai humne usay uski zeenat banaya, taake hum unhein aazmayein ke un mein se kaun amal mein sab se acha hai.'],
+['51:56',9,'sal dis','Maine jinn aur insaan ko sirf is liye paida kiya ke woh meri ibadat karein.'],
+['99:7',9,'akr dis','To jisne zarra barabar neki ki, woh usay dekh lega.'],
+['99:8',8,'akr','Aur jisne zarra barabar burai ki, woh usay dekh lega.'],
+['31:18',8,'akh','Logon se munh na phero aur zameen par akar kar na chalo. Beshak Allah kisi itrane wale, fakhr karne wale ko pasand nahi karta.'],
+['31:19',7,'akh','Apni chaal mein miyana-rawi rakho aur apni awaz past rakho. Beshak sab se buri awaz gadhe ki awaz hai.'],
+['17:37',8,'akh','Zameen par akar kar na chalo. Tum na zameen ko phaar sakte ho aur na paharon ki bulandi ko pohanch sakte ho.'],
+['25:63',8,'akh','Rehman ke bande woh hain jo zameen par narmi se chalte hain, aur jab jahil unse baat karein to kehte hain: Salam.'],
+['41:34',9,'akh','Neki aur burai barabar nahi. Burai ko us tareeqe se door karo jo sab se acha ho, to woh jiske aur tumhare darmiyan dushmani thi aisa ho jayega jaise gehra dost.'],
+['17:24',9,'akh dua','Aur unke samne rehmat se aajizi ka baazu jhukaye rakho aur kaho: Aye mere Rab! In dono par reham farma jaise inhon ne bachpan mein mujhe pala.'],
+['16:90',8,'akh','Beshak Allah insaaf, ehsaan aur rishtedaron ko dene ka hukm deta hai, aur behayai, burai aur zyadti se rokta hai. Woh tumhein naseehat karta hai taake tum yaad rakho.'],
+['61:2',9,'akh dis','Aye imaan walo! Tum woh baat kyun kehte ho jo karte nahi?'],
+['61:3',8,'akh dis','Allah ke nazdeek yeh bohat napasandeeda hai ke tum woh kaho jo karte nahi.'],
+['33:70',9,'akh','Aye imaan walo! Allah se daro aur seedhi sachi baat kaho.'],
+['9:119',10,'akh','Aye imaan walo! Allah se daro aur sachon ke saath raho.'],
+['30:21',9,'mar','Uski nishaniyon mein se hai ke usne tumhare liye tum hi mein se jore banaye taake tum unse sukoon pao, aur tumhare darmiyan mohabbat aur rehmat rakh di. Beshak is mein ghaur karne walon ke liye nishaniyan hain.'],
+['24:32',9,'mar riz','Tum mein se jo be-nikah hain unka nikah kar do, aur apne nek ghulamon aur laundiyon ka bhi. Agar woh ghareeb honge to Allah apne fazl se unhein ghani kar dega. Allah wusat wala, jaanne wala hai.'],
+['51:49',7,'mar','Aur humne har cheez ke jore banaye taake tum naseehat hasil karo.'],
+['78:8',7,'mar','Aur humne tumhein jore jore paida kiya.'],
+['55:13',9,'shk','To tum dono apne Rab ki kaun kaun si nematon ko jhutlaoge?'],
+['55:60',9,'akh','Neki ka badla neki ke siwa kya hai?'],
+['2:216',7,'taw sab','Tum par jang farz ki gayi halanke woh tumhein nagawar hai. Ho sakta hai tum kisi cheez ko napasand karo aur woh tumhare liye behtar ho, aur ho sakta hai tum kisi cheez ko pasand karo aur woh tumhare liye buri ho. Allah janta hai aur tum nahi jaante.'],
+['64:16',8,'dis','To jitna ho sake Allah se daro, suno aur itaat karo, aur kharch karo, yeh tumhare apne liye behtar hai. Aur jo apne nafs ki kanjoosi se bacha liya gaya, wohi kamyab hain.'],
+['4:28',8,'mer','Allah tum par se bojh halka karna chahta hai, aur insaan kamzor paida kiya gaya hai.'],
+['20:2',7,'mer','Humne tum par Quran is liye nahi utara ke tum mushaqqat mein par jao.'],
+['54:17',8,'mer dis','Aur humne Quran ko naseehat ke liye aasan kar diya, to hai koi naseehat hasil karne wala?'],
+['16:97',9,'dis mer','Jo koi nek amal kare, mard ho ya aurat, aur woh momin ho, to hum usay zaroor pakeeza zindagi denge aur unke behtareen aamaal ke mutabiq ajr denge.'],
+['10:62',8,'mer taw','Sun lo! Allah ke doston par na koi khauf hai aur na woh ghamgeen honge.'],
+['89:27',8,'mer akr','Aye itminan wali jaan!'],
+['89:28',8,'mer akr','Apne Rab ki taraf laut chal, tu us se razi, woh tujh se razi.'],
+['26:62',6,'taw sty','Kaha: Hargiz nahi! Mere saath mera Rab hai, woh mujhe raasta dikhayega.'],
+['12:86',6,'sab sty','Kaha: Main apni pareshani aur gham ki faryad sirf Allah se karta hoon, aur Allah ki taraf se woh jaanta hoon jo tum nahi jaante.'],
+['21:83',6,'dua sab sty','Aur Ayyub ko yaad karo, jab usne apne Rab ko pukara: Mujhe takleef pohanchi hai, aur tu sab reham karne walon se zyada reham karne wala hai.'],
+['37:99',5,'taw sty','Aur kaha: Main apne Rab ki taraf jane wala hoon, woh mujhe raasta dikhayega.'],
+['20:46',6,'taw sty','Farmaya: Daro mat, main tum dono ke saath hoon, sunta hoon aur dekhta hoon.'],
+['18:10',6,'dua sty','Jab un naujawanon ne ghaar mein panah li aur kaha: Aye hamare Rab! Hamein apne paas se rehmat ata farma aur hamare kaam mein hamare liye rehnumai muhayya farma.'],
+['12:4',2,'sty','Jab Yusuf ne apne baap se kaha: Abba jaan! Maine gyarah sitare aur suraj aur chaand dekhe, maine unhein apne liye sajda karte dekha.'],
+['27:30',2,'sty','Yeh Sulaiman ki taraf se hai, aur yeh Allah ke naam se hai jo bohat meherban, nihayat reham wala hai.'],
+['105:1',2,'sty','Kya tumne nahi dekha ke tumhare Rab ne hathi walon ke saath kya kiya?'],
+];
+// Typed entries (partial ayat and hadith): [id, score, tags, label, arabic, roman urdu]
+const LIBT=[
+['q29:45',9,'sal dis','AYAH · AL-ANKABUT 29:45','إِنَّ الصَّلَاةَ تَنْهَىٰ عَنِ الْفَحْشَاءِ وَالْمُنكَرِ','Beshak namaz behayai aur burai se rokti hai.'],
+['q4:103',9,'sal dis','AYAH · AN-NISA 4:103','إِنَّ الصَّلَاةَ كَانَتْ عَلَى الْمُؤْمِنِينَ كِتَابًا مَّوْقُوتًا','Beshak namaz momino par muqarrar waqt par farz hai.'],
+['h1',7,'sal','HADITH · SAHIH AL-BUKHARI 645','صَلاَةُ الْجَمَاعَةِ تَفْضُلُ صَلاَةَ الْفَذِّ بِسَبْعٍ وَعِشْرِينَ دَرَجَةً','Jamaat ki namaz akele ki namaz se 27 darje zyada afzal hai.'],
+['h2',7,'dis','HADITH · SAHIH MUSLIM 783','أَحَبُّ الأَعْمَالِ إِلَى اللَّهِ تَعَالَى أَدْوَمُهَا وَإِنْ قَلَّ','Allah ko sab se pyara amal woh hai jo hamesha kiya jaye, chahe thora ho.'],
+['h3',7,'dis','HADITH · SAHIH AL-BUKHARI 1','إِنَّمَا الأَعْمَالُ بِالنِّيَّاتِ','Aamaal ka daromadaar niyyaton par hai.'],
+['h4',5,'akh','HADITH · SAHIH MUSLIM 55','الدِّينُ النَّصِيحَةُ','Deen khair-khwahi ka naam hai.'],
+['h5',6,'akh dis','HADITH · SAHIH AL-BUKHARI 6116','لاَ تَغْضَبْ','Ghussa na karo.'],
+['h6',6,'sal','HADITH · SAHIH MUSLIM 223','الطُّهُورُ شَطْرُ الإِيمَانِ','Pakeezgi aadha imaan hai.'],
+['h7',6,'dis','HADITH · SAHIH AL-BUKHARI 5027','خَيْرُكُمْ مَنْ تَعَلَّمَ الْقُرْآنَ وَعَلَّمَهُ','Tum mein sab se behtar woh hai jo Quran seekhe aur sikhaye.'],
+['h8',6,'akh','HADITH · SAHIH AL-BUKHARI 10','الْمُسْلِمُ مَنْ سَلِمَ الْمُسْلِمُونَ مِنْ لِسَانِهِ وَيَدِهِ','Musalman woh hai jiski zaban aur haath se doosre musalman mehfooz rahein.'],
+['h9',6,'akh','HADITH · SAHIH AL-BUKHARI 6018','مَنْ كَانَ يُؤْمِنُ بِاللَّهِ وَالْيَوْمِ الآخِرِ فَلْيَقُلْ خَيْرًا أَوْ لِيَصْمُتْ','Jo Allah aur aakhirat ke din par imaan rakhta hai, woh achi baat kahe ya khamosh rahe.'],
+['h10',6,'akh','HADITH · SAHIH AL-BUKHARI 13','لاَ يُؤْمِنُ أَحَدُكُمْ حَتَّى يُحِبَّ لأَخِيهِ مَا يُحِبُّ لِنَفْسِهِ','Tum mein se koi momin nahi ho sakta jab tak apne bhai ke liye wohi pasand na kare jo apne liye karta hai.'],
+['h11',6,'mer dis','HADITH · SAHIH AL-BUKHARI 69','يَسِّرُوا وَلاَ تُعَسِّرُوا','Aasani paida karo, mushkil paida na karo.'],
+['h12',6,'akh','HADITH · SAHIH AL-BUKHARI 2989','الْكَلِمَةُ الطَّيِّبَةُ صَدَقَةٌ','Achi baat bhi sadqa hai.'],
+['h13',7,'dis','HADITH · SAHIH MUSLIM 2664','الْمُؤْمِنُ الْقَوِيُّ خَيْرٌ وَأَحَبُّ إِلَى اللَّهِ مِنَ الْمُؤْمِنِ الضَّعِيفِ','Taqatwar momin kamzor momin se behtar aur Allah ko zyada pyara hai.'],
+];
 const P=['fajr','zuhr','asr','maghrib','isha'],NM={fajr:'FAJR',zuhr:'ZUHR',asr:'ASR',maghrib:'MAGHRIB',isha:'ISHA'};
 const TZ=5,H=3600e3,DAY=864e5,$=s=>document.querySelector(s);
-const REM=[
-['AYAH · AL-BAQARAH 2:153','يَا أَيُّهَا الَّذِينَ آمَنُوا اسْتَعِينُوا بِالصَّبْرِ وَالصَّلَاةِ ۚ إِنَّ اللَّهَ مَعَ الصَّابِرِينَ','Aye imaan walo! Sabr aur namaz se madad lo. Beshak Allah sabr karne walon ke saath hai.'],
-['AYAH · TA-HA 20:14','إِنَّنِي أَنَا اللَّهُ لَا إِلَٰهَ إِلَّا أَنَا فَاعْبُدْنِي وَأَقِمِ الصَّلَاةَ لِذِكْرِي','Beshak main hi Allah hoon, mere siwa koi mabood nahi. To meri ibadat karo aur meri yaad ke liye namaz qaim karo.'],
-['AYAH · AL-ANKABUT 29:45','إِنَّ الصَّلَاةَ تَنْهَىٰ عَنِ الْفَحْشَاءِ وَالْمُنكَرِ','Beshak namaz behayai aur burai se rokti hai.'],
-['AYAH · AN-NISA 4:103','إِنَّ الصَّلَاةَ كَانَتْ عَلَى الْمُؤْمِنِينَ كِتَابًا مَّوْقُوتًا','Beshak namaz momino par muqarrar waqt par farz hai.'],
-['AYAH · AL-BAQARAH 2:238','حَافِظُوا عَلَى الصَّلَوَاتِ وَالصَّلَاةِ الْوُسْطَىٰ وَقُومُوا لِلَّهِ قَانِتِينَ','Sab namazon ki hifazat karo, khaas kar darmiyani namaz ki, aur Allah ke samne adab se khare raho.'],
-['AYAH · AR-RA\'D 13:28','أَلَا بِذِكْرِ اللَّهِ تَطْمَئِنُّ الْقُلُوبُ','Sun lo! Allah ki yaad hi se dilon ko itminan milta hai.'],
-['AYAH · AL-BAQARAH 2:45','وَاسْتَعِينُوا بِالصَّبْرِ وَالصَّلَاةِ ۚ وَإِنَّهَا لَكَبِيرَةٌ إِلَّا عَلَى الْخَاشِعِينَ','Sabr aur namaz se madad lo. Aur yeh bhari hai, magar aajizi karne walon par nahi.'],
-['HADITH · SAHIH AL-BUKHARI 645','صَلاَةُ الْجَمَاعَةِ تَفْضُلُ صَلاَةَ الْفَذِّ بِسَبْعٍ وَعِشْرِينَ دَرَجَةً','Jamaat ki namaz akele ki namaz se 27 darje zyada afzal hai.'],
-['HADITH · SAHIH MUSLIM 783','أَحَبُّ الأَعْمَالِ إِلَى اللَّهِ تَعَالَى أَدْوَمُهَا وَإِنْ قَلَّ','Allah ko sab se pyara amal woh hai jo hamesha kiya jaye, chahe thora ho.'],
-['AYAH · IBRAHIM 14:40','رَبِّ اجْعَلْنِي مُقِيمَ الصَّلَاةِ وَمِن ذُرِّيَّتِي ۚ رَبَّنَا وَتَقَبَّلْ دُعَاءِ','Aye mere Rab! Mujhe namaz qaim karne wala bana, aur meri aulad ko bhi. Aye hamare Rab! Meri dua qubool farma.'],
-['AYAH · AL-MU\'MINUN 23:1-2','قَدْ أَفْلَحَ الْمُؤْمِنُونَ ۝ الَّذِينَ هُمْ فِي صَلَاتِهِمْ خَاشِعُونَ','Yaqeenan kamyab ho gaye imaan wale, jo apni namaz mein aajizi karte hain.'],
-['AYAH · ASH-SHARH 94:6','إِنَّ مَعَ الْعُسْرِ يُسْرًا','Beshak har mushkil ke saath aasani hai.']];
 const OFF=(()=>{const t=new URLSearchParams(location.search).get('t');return t?Date.parse(t)-Date.now():0})(),now_=()=>Date.now()+OFF;
 let S={days:{},cfg:{off:{},theme:'auto'},api:'',q:[],start:0};
 try{Object.assign(S,JSON.parse(localStorage.getItem('nz')||'{}'))}catch(e){}
 S.cfg=S.cfg||{off:{},theme:'auto'};S.cfg.off=S.cfg.off||{};S.q=S.q||[];S.days=S.days||{};
 const persist=()=>{try{localStorage.setItem('nz',JSON.stringify(S))}catch(e){}};
 (()=>{const a=new URLSearchParams(location.search).get('api');if(a){S.api='https://script.google.com/macros/s/'+a+'/exec';persist()}})();
-let sel=null,choice=null,holding=false,forceRing=false,recapDay=null,recapWeek=false,remI=Math.floor(now_()/DAY)%REM.length,flashP=null,page=0,lastKey='',anim='',lastScroll=0;
+let sel=null,choice=null,holding=false,forceRing=false,recapDay=null,recapWeek=false,flashP=null,page=0,lastKey='',anim='',lastScroll=0;
 const pad=n=>String(n).padStart(2,'0'),keyOf=(y,m,d)=>`${y}-${pad(m)}-${pad(d)}`;
 const parts=k=>{const[y,m,d]=k.split('-').map(Number);return{y,m,d}};
 function addDays(k,n){const{y,m,d}=parts(k),t=new Date(Date.UTC(y,m-1,d)+n*DAY);return keyOf(t.getUTCFullYear(),t.getUTCMonth()+1,t.getUTCDate())}
@@ -305,7 +430,24 @@ function byHtml(now,today){const o=stats30(now,today),wk=weakest(o);
 function chainHtml(now){const c=chain(now);let d=GL;for(let n=0;n<66;n++){const x=16+(n%11)*30,y=16+Math.floor(n/11)*30;d+=n<c.c?dot(x,y,'J',7):n===c.c?`<circle class="pz" cx="${x}" cy="${y}" r="7" fill="none" stroke="var(--ink)" stroke-width="2"/>`:`<circle cx="${x}" cy="${y}" r="2.5" fill="var(--track)"/>`}
   const rl=['A day counts when no prayer is missed. Late counts.','Missed one? Pray it late the same day.','Breaks only after 2 missed days in a row.'].map((t,i)=>`<div style="display:flex;gap:12px"><span style="color:var(--dim)">0${i+1}</span><span>${t}</span></div>`).join('');
   return`<div class="in">${ptop(3,'CHAIN')}<div style="display:flex;align-items:baseline;gap:12px"><div class="doto" style="font-size:112px;line-height:.85">${c.c}</div><div class="col" style="font-size:12px;letter-spacing:1px;color:var(--mute)"><span>${c.c===1?'DAY':'DAYS'}</span><span>BEST ${c.best}</span></div></div><svg viewBox="0 0 332 182" width="100%">${d}</svg><div class="col" style="gap:10px;font-size:12px;line-height:1.45;color:var(--mute)">${rl}</div></div>`}
-function remHtml(){const r=REM[remI];return`<div class="in">${ptop(5,"TODAY'S REMINDER")}<button data-act="rem" class="rm${anim==='rem'?' sw':''}" style="flex:1;padding:0 0 40px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:28px;text-align:center"><div style="font-size:11px;letter-spacing:3px;color:var(--mute)">${r[0]}</div><div lang="ar" dir="rtl" style="font-family:'Amiri','Geeza Pro',serif;font-size:30px;line-height:1.95">${r[1]}</div><div style="width:28px;height:1px;background:var(--dim)"></div><div style="font-family:'Instrument Serif',Georgia,serif;font-size:25px;line-height:1.4">${r[2]}</div></button><div style="text-align:center;font-size:10px;letter-spacing:3px;color:var(--dim)">TAP FOR ANOTHER</div></div>`}
+const ITEMS=LIBQ.map(([ref,sc,t,ur])=>({id:ref,ref,sc,tags:t.split(' '),ur})).concat(LIBT.map(([id,sc,t,label,ar,ur])=>({id,sc,tags:t.split(' '),label,ar,ur}))),IMAP={};ITEMS.forEach(i=>IMAP[i.id]=i);
+let AR={};try{AR=JSON.parse(localStorage.getItem('nzar')||'{}')}catch(e){}
+const R=S.rem=Object.assign({like:{},boost:{},hist:[],pos:0,day:''},S.rem||{});R.hist=R.hist.filter(i=>IMAP[i]);
+const hasAr=it=>!!(it.ar||AR[it.id]);
+function weight(it){let w=it.sc+(R.like[it.id]?5:0),b=0;for(const t of it.tags)b+=(R.boost[t]||0)*.8;return Math.pow(Math.max(1,w+Math.min(6,b)),2)}
+function pick(){const recent=new Set(R.hist.slice(-18)),on=navigator.onLine!==false;let pool=ITEMS.filter(i=>!recent.has(i.id)&&(on||hasAr(i)));if(!pool.length)pool=ITEMS.filter(hasAr);if(!pool.length)pool=ITEMS;
+  let tot=0;for(const i of pool)tot+=weight(i);let x=Math.random()*tot;for(const i of pool){x-=weight(i);if(x<=0)return i.id}return pool[0].id}
+async function loadAr(id){const it=IMAP[id];if(!it||hasAr(it)||it.loading)return;it.loading=1;try{const j=await fetch('https://api.alquran.cloud/v1/ayah/'+it.ref+'/quran-uthmani').then(r=>r.json());let t=j.data.text;const[su,ay]=it.ref.split(':');
+    if(ay==='1'&&su!=='1'&&su!=='9')t=t.split(' ').slice(4).join(' ');AR[id]={t,n:j.data.surah.englishName};try{localStorage.setItem('nzar',JSON.stringify(AR))}catch(e){}
+    if(R.hist[R.pos]===id&&!holding){anim='ar';render()}}catch(e){}it.loading=0}
+function remGo(d){if(d<0){if(R.pos>0)R.pos--;else return false}else{if(R.pos<R.hist.length-1)R.pos++;else{R.hist.push(R.next&&IMAP[R.next]&&R.next!==R.hist[R.hist.length-1]?R.next:pick());R.next='';if(R.hist.length>60){R.hist=R.hist.slice(-60)}R.pos=R.hist.length-1}}persist();return true}
+function remInit(){const d=dayKey(now_());if(!R.hist.length||R.day!==d){R.day=d;R.pos=R.hist.length-1;remGo(1)}loadAr(R.hist[R.pos]);if(!R.next||!IMAP[R.next]){R.next=pick();}loadAr(R.next)}
+function toggleLike(){const it=IMAP[R.hist[R.pos]];if(!it)return;const on=!R.like[it.id];if(on)R.like[it.id]=1;else delete R.like[it.id];for(const t of it.tags)R.boost[t]=Math.max(0,(R.boost[t]||0)+(on?1:-1));persist();if(on)buzz(15);anim='heart';render()}
+const HEART=on=>`<svg width="22" height="22" viewBox="0 0 24 24" fill="${on?'currentColor':'none'}" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M12 20.5s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7.6a4.3 4.3 0 0 1 7.5 2.7c0 5.6-7.5 10.2-7.5 10.2z"/></svg>`;
+function remHtml(){const it=IMAP[R.hist[R.pos]]||ITEMS[0],c=AR[it.id],ar=it.ar||(c&&c.t)||'',label=it.label||('AYAH · '+(c?c.n.toUpperCase()+' ':'')+it.ref),al=ar.length,ul=it.ur.length,liked=!!R.like[it.id];
+  const afs=al>260?19:al>170?22:al>100?26:30,ufs=ul>230?18:ul>150?21:25;
+  return`<div class="in">${ptop(5,'')}<button data-act="rem" aria-label="Tap left for previous, right for next" class="rm${anim==='rem'?' sw':''}" style="flex:1;min-height:0;padding:0 0 8px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;text-align:center;width:100%"><div style="font-size:11px;letter-spacing:3px;color:var(--mute)">${label}</div><div lang="ar" dir="rtl" class="${anim==='ar'?'sw':''}" style="font-family:'Amiri','Geeza Pro',serif;font-size:${afs}px;line-height:1.9;min-height:${afs*1.9}px">${ar||'<span style="color:var(--dim);letter-spacing:6px">· · ·</span>'}</div><div style="width:28px;height:1px;background:var(--dim)"></div><div style="font-family:'Instrument Serif',Georgia,serif;font-size:${ufs}px;line-height:1.4">${it.ur}</div></button>
+  <div style="display:flex;justify-content:center"><button data-act="heart" aria-label="${liked?'Unlike':'Like'}" aria-pressed="${liked}" class="ic${anim==='heart'&&liked?' hpop':''}" style="color:${liked?'var(--ink)':'var(--dim)'}">${HEART(liked)}</button></div></div>`}
 function setHtml(now,today){const w=win(today),th=S.cfg.theme||'auto';
   return`<div class="in" style="justify-content:flex-start;gap:28px;height:auto;min-height:100%"><div class="top"><span class="lab">SETTINGS</span><button data-act="setx" style="min-height:44px;font-size:11px;letter-spacing:3px;color:var(--mute)">CLOSE</button></div>
   <div class="col" style="gap:10px"><div class="lab">THEME</div><div class="seg">${['auto','light','dark'].map(t=>`<button data-th="${t}" class="${th===t?'on':''}">${t.toUpperCase()}</button>`).join('')}</div></div>
@@ -346,14 +488,15 @@ document.addEventListener('click',e=>{const t=e.target.closest('[data-act],[data
   if(a==='down')$('#v').scrollTo({top:$('#stats').offsetTop,behavior:'smooth'});
   else if(a==='up')$('#v').scrollTo({top:0,behavior:'smooth'});
   else if(a==='week')fadeThen('.pgp .rb','recap',()=>{recapWeek=!recapWeek})
-  else if(a==='rem')fadeThen('.rm','rem',()=>{remI=(remI+1)%REM.length})
+  else if(a==='rem'){const r=t.getBoundingClientRect(),dir=e.clientX<r.left+r.width/2?-1:1;if(dir<0&&R.pos===0)return;fadeThen('.rm','rem',()=>{remGo(dir);loadAr(R.hist[R.pos]);if(dir>0&&R.pos===R.hist.length-1){R.next=pick();loadAr(R.next)}})}
+  else if(a==='heart')toggleLike()
   else if(a==='set'){render();$('#set').innerHTML=setHtml(now,today);$('#set').scrollTop=0;requestAnimationFrame(()=>$('#set').classList.add('on'))}
   else if(a==='setx'){$('#set').classList.remove('on')}
 });
-applyTheme();render();pull();flush();
+applyTheme();remInit();render();pull();flush();
 setInterval(()=>{if(!choice&&performance.now()-lastScroll>1500&&!$('#fx').classList.contains('on'))render()},15000);
 const rdy=()=>document.body.classList.add('rdy');(document.fonts&&document.fonts.ready?document.fonts.ready:Promise.resolve()).then(rdy);setTimeout(rdy,1200);
-document.addEventListener('visibilitychange',()=>{if(!document.hidden){sel=null;forceRing=false;render();pull();flush()}});
+document.addEventListener('visibilitychange',()=>{if(!document.hidden){sel=null;forceRing=false;remInit();render();pull();flush()}});
 </script>
 </body>
 </html>

@@ -18,7 +18,7 @@
 @media (prefers-color-scheme: light){:root:not([data-theme="dark"]){--bg:#EDEBE6;--ink:#0A0A0A;--mute:#5E5B55;--dim:#8A877F;--line:#D3CFC7;--track:#BDB9B1;--alone:#7C7972;--late:#A19D95;--red:#D71921;--redbg:#EDC9C4;--fill:#DFDBD3;--inv:#0A0A0A;--invink:#EDEBE6;--glow:.28;--b1:#333333;--b2:#0A0A0A;--bsh:rgba(0,0,0,.26);--bhi:rgba(255,255,255,.16);color-scheme:light}}
 :root[data-theme="light"]{--bg:#EDEBE6;--ink:#0A0A0A;--mute:#5E5B55;--dim:#8A877F;--line:#D3CFC7;--track:#BDB9B1;--alone:#7C7972;--late:#A19D95;--red:#D71921;--redbg:#EDC9C4;--fill:#DFDBD3;--inv:#0A0A0A;--invink:#EDEBE6;--glow:.28;--b1:#333333;--b2:#0A0A0A;--bsh:rgba(0,0,0,.26);--bhi:rgba(255,255,255,.16);color-scheme:light}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{margin:0;height:100%;overflow:hidden;background:var(--bg);color:var(--ink);font-family:'JetBrains Mono',ui-monospace,Menlo,monospace;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;overscroll-behavior:none}
+html,body{margin:0;height:100%;width:100%;overflow:hidden;position:fixed;inset:0;background:var(--bg);color:var(--ink);font-family:'JetBrains Mono',ui-monospace,Menlo,monospace;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;overscroll-behavior:none}
 html{-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
 body{opacity:0;transition:opacity .45s ease,background-color .35s ease,color .35s ease;font-variant-numeric:tabular-nums;touch-action:manipulation}
 body.rdy{opacity:1}
@@ -41,11 +41,11 @@ button:active{transform:scale(.96);opacity:.65}
 .mrow{display:flex;justify-content:space-between;align-items:center;align-self:stretch;margin:0 -12px}
 .ic{width:44px;height:44px;display:flex;align-items:center;justify-content:center;color:var(--mute)}
 .doto{font-family:'Doto','JetBrains Mono',monospace;font-weight:900}
-#v{height:100dvh;overflow-y:auto;scroll-snap-type:y mandatory;scrollbar-width:none}
+#v{position:fixed;inset:0;overflow-y:auto;-webkit-overflow-scrolling:touch;scroll-snap-type:y mandatory;scrollbar-width:none}
 #v::-webkit-scrollbar,#pg::-webkit-scrollbar{display:none}
-.scr{height:100dvh;scroll-snap-align:start;scroll-snap-stop:always}
-.in{height:100%;max-width:430px;margin:0 auto;padding:calc(env(safe-area-inset-top) + 22px) 28px calc(env(safe-area-inset-bottom) + 20px);display:flex;flex-direction:column;justify-content:space-between}
-#stats{position:relative}#sh{opacity:0;position:absolute;top:0;left:0;right:0;z-index:2;pointer-events:none}.shin{max-width:430px;margin:0 auto;padding:calc(env(safe-area-inset-top) + 22px) 28px 0;display:flex;justify-content:space-between;align-items:center;pointer-events:auto}
+.scr{height:100%;scroll-snap-align:start;scroll-snap-stop:always;overflow:hidden}
+.in{height:100%;max-width:430px;margin:0 auto;padding:calc(env(safe-area-inset-top) + 6px) 26px calc(env(safe-area-inset-bottom) + 6px);display:flex;flex-direction:column;justify-content:space-between}
+#stats{position:relative}#sh{opacity:0;position:absolute;top:0;left:0;right:0;z-index:2;pointer-events:none}.shin{max-width:430px;margin:0 auto;padding:calc(env(safe-area-inset-top) + 6px) 26px 0;display:flex;justify-content:space-between;align-items:center;pointer-events:auto}
 #pg{height:100%;display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none}
 .pgp{flex:0 0 100vw;height:100%;scroll-snap-align:center;scroll-snap-stop:always}
 .top{display:flex;justify-content:space-between;align-items:center;font-size:12px;letter-spacing:1.5px;color:var(--mute);min-height:44px}
@@ -88,7 +88,6 @@ button:active{transform:scale(.96);opacity:.65}
 .seg{display:flex;border:1px solid var(--track);border-radius:22px;overflow:hidden}
 .seg button{flex:1;height:44px;font-size:12px;letter-spacing:2px;color:var(--mute)}
 .seg button.on{background:var(--ink);color:var(--bg)}
-.in{will-change:opacity,transform}
 .row{transition:opacity .2s}
 .adj{display:grid;grid-template-columns:1fr 44px 84px 44px;align-items:center;padding:6px 0;border-bottom:1px solid var(--line);font-size:14px}
 .adj button{height:44px;font-size:20px;color:var(--mute)}
@@ -228,12 +227,12 @@ function celebrate(perfect){render(true);const fx=$('#fx'),r=$('#ring').getBound
   const t1=perfect?2100:1400;setTimeout(()=>{fx.classList.add('fl2');buzz([40,60,120])},t1);
   setTimeout(()=>{render();fx.classList.add('out')},t1+(perfect?2200:1500));setTimeout(()=>{fx.className=''},t1+(perfect?3000:2300))}
 // ---------- drawing ----------
-const GL='<defs><filter id="g" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="6"/></filter></defs>';
+const GL='';
 const B='pathLength="360" transform="rotate(-90 160 160)" stroke-linecap="round" fill="none"';
 const seg=(c,w,s,l,x='')=>`<circle cx="160" cy="160" r="140" stroke="${c}" stroke-width="${w}" ${B} stroke-dasharray="${l.toFixed(1)} 360" stroke-dashoffset="${(-s).toFixed(1)}" ${x}/>`;
 const dash=(c,w,st,pat)=>`<circle cx="160" cy="160" r="140" stroke="${c}" stroke-width="${w}" ${B} stroke-dasharray="${pat}" stroke-dashoffset="${-st}"/>`;
 function arc(i,s,frac,fl){const a=i*72+5,L=62;
-  if(s==='J')return seg('var(--ink)',16,a,L,`filter="url(#g)" opacity="var(--glow)" ${fl?'class="fl"':''}`)+seg('var(--ink)',12,a,L,fl?'class="dr"':'');
+  if(s==='J')return seg('var(--ink)',24,a,L,`opacity=".16" ${fl?'class="fl"':''}`)+seg('var(--ink)',12,a,L,fl?'class="dr"':'');
   if(s==='O')return seg('var(--alone)',8,a,L,fl?'class="dr"':'');
   if(s==='L')return dash('var(--late)',8,a,'0.1 6 '.repeat(10)+'0.1 360');
   if(s==='N')return seg('var(--redbg)',8,a,L)+seg('var(--red)',8,a+L*frac,Math.max(.5,L*(1-frac)));
@@ -260,7 +259,7 @@ function homeHtml(now,today,forceR){
   <div class="ringw${flashP?' pop':''}">${ringSvg(today,now,p)}<div class="nm doto${A1}" style="${pname(today,p).length>5?'font-size:min(54px,13.5vw)':''}">${pname(today,p)}</div><div class="sb${A1}" ${r&&r.s==='J'?'style="color:var(--ink)"':''}>${sub}</div></div><div class="bot">${bottom}</div></div>`}
 function nextLine(now,today){const w=win(today);for(const p of P)if(!rec(today,p)&&w[p][1]>now)return`<div style="font-size:13px;letter-spacing:1.5px;color:var(--mute)">${now>=w[p][0]?'NOW':'NEXT'} · ${pname(today,p)} ${now>=w[p][0]?'':clock(w[p][0])}</div>`;return''}
 function dot(x,y,s,r=10){
-  if(s==='J')return`<circle cx="${x}" cy="${y}" r="${r+1}" fill="var(--ink)" filter="url(#g)" opacity="var(--glow)"/><circle cx="${x}" cy="${y}" r="${r}" fill="var(--ink)"/>`;
+  if(s==='J')return`<circle cx="${x}" cy="${y}" r="${r+4}" fill="var(--ink)" opacity=".18"/><circle cx="${x}" cy="${y}" r="${r}" fill="var(--ink)"/>`;
   if(s==='O')return`<circle cx="${x}" cy="${y}" r="${r*.8}" fill="var(--alone)"/>`;
   if(s==='L')return`<circle cx="${x}" cy="${y}" r="${r*.4}" fill="var(--late)"/>`;
   if(s==='X')return`<circle cx="${x}" cy="${y}" r="${r*.8}" fill="none" stroke="var(--dim)" stroke-width="1.5"/>`;
@@ -283,7 +282,7 @@ const TRI=dn=>`<svg width="9" height="8" viewBox="0 0 10 9" style="vertical-alig
 function weekHtml(now,today){const days=[];for(let i=6;i>=0;i--)days.push(addDays(today,-i));let on=0,due=0,pon=0,pdue=0,svg=GL;
   days.forEach((k,ci)=>{const s=sum(k,now);on+=s.on;due+=s.due;const cx=24+ci*46,x0=cx-20,R=`x="${x0}" y="4" width="40" height="244" rx="20"`;
     if(s.b==='K')svg+=`<rect ${R} fill="none" stroke="var(--track)"/>`;if(s.b==='D')svg+=`<rect ${R} fill="var(--fill)" stroke="var(--dim)"/>`;
-    if(s.b==='G'||s.b==='P')svg+=`<rect ${R} fill="none" stroke="var(--ink)" stroke-width="2" filter="url(#g)" opacity="var(--glow)"/><rect ${R} fill="var(--fill)" stroke="var(--ink)" stroke-width="1.5"/>`;
+    if(s.b==='G'||s.b==='P')svg+=`<rect ${R} fill="none" stroke="var(--ink)" stroke-width="8" opacity=".14"/><rect ${R} fill="var(--fill)" stroke="var(--ink)" stroke-width="1.5"/>`;
     if(s.b==='P')svg+=`<path d="M${cx} 258 l4 6 l-4 6 l-4 -6 z" fill="var(--ink)"/>`;s.st.forEach((t,ri)=>svg+=dot(cx,30+ri*48,t))});
   for(let i=13;i>=7;i--){const s=sum(addDays(today,-i),now);pon+=s.on;pdue+=s.due}const d=on-pon;
   return`<div class="in">${ptop(0,'THIS WEEK')}<div class="col" style="gap:6px"><div class="doto" style="font-size:84px;line-height:.85">${on}<span style="color:var(--dim)">/${due}</span></div><div style="font-size:12px;letter-spacing:1px;color:var(--mute)">ON TIME${pdue?` <span style="color:var(--ink)">${d>0?TRI(0):d<0?TRI(1):'='} ${Math.abs(d)}</span>`:''}</div></div>
@@ -296,7 +295,7 @@ function questsHtml(now,today){const c=chain(now),TH=[0,150,500,1200,2500,1e9],R
   const wk=weakest(stats30(now,today))||'maghrib';let won=0,fj=0;for(let i=0;i<7;i++){const k=addDays(today,-i),t=st(k,wk,now);if(t==='J'||t==='O')won++;if(st(k,'fajr',now)==='J')fj=1}
   const q=(lab,d,T)=>{d=Math.min(d,T);const w=(334-(T-1)*6)/T;let s='';for(let i=0;i<T;i++){const x=(i*(w+6)).toFixed(1);s+=i<d?`<rect x="${x}" width="${w.toFixed(1)}" height="8" rx="4" fill="var(--ink)"/>`:i===d?`<rect class="pz" x="${x}" width="${w.toFixed(1)}" height="8" rx="4" fill="none" stroke="var(--ink)" stroke-width="1.5"/>`:`<rect x="${x}" width="${w.toFixed(1)}" height="8" rx="4" fill="var(--line)"/>`}
     return`<div class="col" style="gap:10px"><div style="display:flex;justify-content:space-between;font-size:12px;letter-spacing:1.5px"><span>${lab}</span><span style="color:var(--dim)">${d}/${T}</span></div><svg viewBox="0 0 334 8" width="100%" height="8" preserveAspectRatio="none">${s}</svg></div>`};
-  const bd=[['5/5',c.first5],['7',c.best>=7],['L',c.rec_],['30',c.best>=30],['66',c.best>=66]].map(([l,e],i)=>{const x=33+i*67;return e?`<circle cx="${x}" cy="34" r="27" fill="var(--ink)" filter="url(#g)" opacity="var(--glow)"/><circle cx="${x}" cy="34" r="24" fill="var(--ink)"/><text x="${x}" y="39" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="13" font-weight="700" fill="var(--bg)">${l}</text>`:`<circle cx="${x}" cy="34" r="24" fill="none" stroke="var(--track)" stroke-width="1.5" stroke-dasharray="2 4"/><text x="${x}" y="39" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="13" font-weight="700" fill="var(--track)">${l}</text>`}).join('');
+  const bd=[['5/5',c.first5],['7',c.best>=7],['L',c.rec_],['30',c.best>=30],['66',c.best>=66]].map(([l,e],i)=>{const x=33+i*67;return e?`<circle cx="${x}" cy="34" r="29" fill="var(--ink)" opacity=".18"/><circle cx="${x}" cy="34" r="24" fill="var(--ink)"/><text x="${x}" y="39" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="13" font-weight="700" fill="var(--bg)">${l}</text>`:`<circle cx="${x}" cy="34" r="24" fill="none" stroke="var(--track)" stroke-width="1.5" stroke-dasharray="2 4"/><text x="${x}" y="39" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="13" font-weight="700" fill="var(--track)">${l}</text>`}).join('');
   return`<div class="in">${ptop(1,'')}<div style="align-self:center;width:200px;height:200px;position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px"><svg width="200" height="200" viewBox="0 0 200 200" style="position:absolute;inset:0"><circle cx="100" cy="100" r="90" fill="none" stroke="var(--line)" stroke-width="6"/><circle cx="100" cy="100" r="90" fill="none" stroke="var(--ink)" stroke-width="6" stroke-linecap="round" pathLength="100" stroke-dasharray="${(pr*100).toFixed(0)} 100" transform="rotate(-90 100 100)"/></svg><div class="doto" style="font-size:88px;line-height:.8">${lv+1}</div><div style="font-size:11px;letter-spacing:3px;color:var(--mute)">${RN[lv]}</div></div>
   <div class="col" style="gap:22px">${q('FAJR ON TIME ×7',run,7)}${q(NM[wk]+' ON TIME ×5',won,5)}${q('FAJR IN JAMAAT',fj,1)}</div><svg viewBox="0 0 334 68" width="100%" style="max-height:68px">${GL}${bd}</svg></div>`}
 function byHtml(now,today){const o=stats30(now,today),wk=weakest(o);
@@ -311,22 +310,23 @@ function setHtml(now,today){const w=win(today),th=S.cfg.theme||'auto';
   return`<div class="in" style="justify-content:flex-start;gap:28px;height:auto;min-height:100%"><div class="top"><span class="lab">SETTINGS</span><button data-act="setx" style="min-height:44px;font-size:11px;letter-spacing:3px;color:var(--mute)">CLOSE</button></div>
   <div class="col" style="gap:10px"><div class="lab">THEME</div><div class="seg">${['auto','light','dark'].map(t=>`<button data-th="${t}" class="${th===t?'on':''}">${t.toUpperCase()}</button>`).join('')}</div></div>
   <div class="col" style="gap:6px"><div class="lab">PRAYER TIMES · KARACHI · HANAFI</div>${P.map(p=>`<div class="adj"><b>${NM[p]}</b><button data-off="${p}" data-d="-1" aria-label="Earlier">−</button><span>${clock(w[p][0])}</span><button data-off="${p}" data-d="1" aria-label="Later">+</button></div>`).join('')}</div>
-  <div style="font-size:11px;letter-spacing:1px;color:var(--dim)">${S.api?(S.q.length?'SYNC PENDING · '+S.q.length:'SYNCED'):'SAVED ON THIS PHONE ONLY'}</div></div>`}
+  <div style="font-size:11px;letter-spacing:1px;color:var(--dim)">${S.api?(S.q.length?'SYNC PENDING · '+S.q.length:'SYNCED'):'SAVED ON THIS PHONE ONLY'} · B5 · ${innerWidth}×${innerHeight}/${$('#v').clientHeight}</div></div>`}
 function applyTheme(){const t=S.cfg.theme||'auto';if(t==='auto')document.documentElement.removeAttribute('data-theme');else document.documentElement.setAttribute('data-theme',t);
   const m=document.querySelector('meta[name=theme-color]');m&&m.setAttribute('content',getComputedStyle(document.documentElement).getPropertyValue('--bg').trim()||'#000')}
 function render(forceR){if(holding)return;const now=now_(),today=dayKey(now);if(!recapDay||recapDay>today)recapDay=today;
   $('#home').innerHTML=homeHtml(now,today,forceR===true);const pg=$('#pg'),x=pg.scrollLeft;
   pg.innerHTML=[weekHtml(now,today),questsHtml(now,today),byHtml(now,today),chainHtml(now),`<div class="in">${ptop(4,'')}${recapHtml(recapDay,now,false)}</div>`,remHtml()].map(h=>`<div class="pgp">${h}</div>`).join('');pg.scrollLeft=x;fx();
   if($('#set').classList.contains('on')){const st_=$('#set').scrollTop;$('#set').innerHTML=setHtml(now,today);$('#set').scrollTop=st_}flashP=null;anim=''}
-let fxq=0;
+let fxq=0,snapT=0;
 function fx(){fxq=0;const v=$('#v'),p=Math.min(1,v.scrollTop/(v.clientHeight||1)),h=$('#home .in');
-  if(h){h.style.opacity=String(Math.max(0,1-p*1.3));h.style.transform=p?`translateY(${-p*28}px) scale(${1-p*.05})`:''}
+  if(h)h.style.opacity=String(Math.max(0,1-p*1.4));
   $('#sh').style.opacity=String(Math.max(0,Math.min(1,p*2-1)));
   const pg=$('#pg'),x=pg.scrollLeft/(pg.clientWidth||1);
-  document.querySelectorAll('.pgp').forEach((e,i)=>{const d=i-x,c=e.firstElementChild;if(c){c.style.opacity=String(1-Math.min(1,Math.abs(d))*.8);c.style.transform=d?`translateX(${d*-36}px) scale(${1-Math.min(1,Math.abs(d))*.04})`:''}});
   document.querySelectorAll('#pd i').forEach((e,i)=>{const a=Math.max(0,1-Math.abs(i-x));e.style.width=(6+12*a)+'px';e.style.opacity=String(.28+.72*a)})}
-function onScroll(){lastScroll=performance.now();if(!fxq)fxq=requestAnimationFrame(fx)}
+function settle(){const v=$('#v'),H=v.clientHeight||1,t=Math.round(v.scrollTop/H)*H;if(Math.abs(v.scrollTop-t)>1)v.scrollTo({top:t,behavior:'smooth'})}
+function onScroll(){lastScroll=performance.now();if(!fxq)fxq=requestAnimationFrame(fx);clearTimeout(snapT);snapT=setTimeout(settle,140)}
 $('#pg').addEventListener('scroll',onScroll,{passive:true});$('#v').addEventListener('scroll',onScroll,{passive:true});
+addEventListener('resize',()=>{settle();fx()});
 function fadeThen(sel_,key,fn){const e=document.querySelector(sel_);if(e)e.classList.add('out');setTimeout(()=>{fn();anim=key;render()},e?170:0)}
 // ---------- events ----------
 let hraf=0,hstart=0;
@@ -343,7 +343,7 @@ document.addEventListener('click',e=>{const t=e.target.closest('[data-act],[data
   if(d.th){S.cfg.theme=d.th;persist();applyTheme();return render()}
   if(d.off){S.cfg.off[d.off]=(S.cfg.off[d.off]||0)+Number(d.d);wc={};persist();return render()}
   const a=d.act;
-  if(a==='down')$('#v').scrollTo({top:innerHeight,behavior:'smooth'});
+  if(a==='down')$('#v').scrollTo({top:$('#stats').offsetTop,behavior:'smooth'});
   else if(a==='up')$('#v').scrollTo({top:0,behavior:'smooth'});
   else if(a==='week')fadeThen('.pgp .rb','recap',()=>{recapWeek=!recapWeek})
   else if(a==='rem')fadeThen('.rm','rem',()=>{remI=(remI+1)%REM.length})

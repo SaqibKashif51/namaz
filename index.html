@@ -74,7 +74,7 @@ button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:poin
 </style>
 </head>
 <body>
-<div id="v"><section class="scr" id="home"></section><section class="scr" id="stats"><div id="sh"><div class="shin"><button data-act="up" style="min-height:44px;color:var(--mute);font-size:11px;letter-spacing:3px">↓ TODAY</button><div class="pd" id="pd"><i class="on"></i><i></i><i></i><i></i><i></i><i></i></div></div></div><div id="pg"></div></section></div>
+<div id="v"><section class="scr" id="home"></section><section class="scr" id="stats"><div id="sh"><div class="shin"><button data-act="up" style="min-height:44px;color:var(--mute);font-size:11px;letter-spacing:3px">↓ TODAY</button><div style="display:flex;align-items:center;gap:14px"><div class="pd" id="pd"><i class="on"></i><i></i><i></i><i></i><i></i><i></i></div><button data-act="set" aria-label="Settings" style="width:44px;height:44px;margin-right:-14px;color:var(--mute);display:flex;align-items:center;justify-content:center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/></svg></button></div></div></div><div id="pg"></div></section></div>
 <div id="fx"><div id="fxb"></div><svg id="fxs" viewBox="0 0 320 320"><circle id="fxc" cx="160" cy="160" r="140" fill="none" stroke-width="10" stroke-linecap="round" pathLength="360" stroke-dasharray="360" transform="rotate(-90 160 160)"/></svg></div>
 <div id="set"></div>
 <script>
@@ -223,7 +223,7 @@ function ringSvg(k,now,tp){const w=win(k);let o=GL;
     o+=`<circle class="hit" data-sel="${p}" cx="160" cy="160" r="140" pathLength="360" transform="rotate(-90 160 160)" stroke-dasharray="72 360" stroke-dashoffset="${-(i*72)}"/>`});
   return`<svg id="ring" viewBox="0 0 320 320">${o}</svg>`}
 function chip(now){const c=chain(now).c;return`<div style="display:flex;align-items:center;gap:7px;color:var(--ink)"><svg width="12" height="12" viewBox="0 0 12 12"><circle cx="6" cy="6" r="4.5" fill="none" stroke="currentColor" stroke-width="2"/></svg>${c} ${c===1?'DAY':'DAYS'}</div>`}
-const GEAR='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/></svg>';
+const GEAR='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--ink)" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/></svg>';
 const more='<button class="more" data-act="down"><i></i>↑ MORE</button>';
 function homeHtml(now,today,forceR){
   const w=win(today),night=!forceR&&!forceRing&&!sel&&!choice&&(rec(today,'isha')||now>=w.recapAt);

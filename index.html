@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Namaz">
+<meta name="theme-color" content="#000000">
+<link rel="apple-touch-icon" href="icon.png">
+<title>Namaz</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Doto:wght@900&family=JetBrains+Mono:wght@400;500;700&family=Amiri:wght@400;700&family=Instrument+Serif&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#000;--ink:#F2F2F2;--mute:#9A9A9A;--dim:#5A5A5A;--line:#1E1E1E;--track:#2E2E2E;--alone:#8E8E8E;--late:#6A6A6A;--red:#FF4438;--redbg:#3A1512;--fill:#1A1A1A;--inv:#EDEBE6;--invink:#0A0A0A;--glow:.75;color-scheme:dark}
+@media (prefers-color-scheme: light){:root:not([data-theme="dark"]){--bg:#EDEBE6;--ink:#0A0A0A;--mute:#5E5B55;--dim:#8A877F;--line:#D3CFC7;--track:#BDB9B1;--alone:#7C7972;--late:#A19D95;--red:#D71921;--redbg:#EDC9C4;--fill:#DFDBD3;--inv:#0A0A0A;--invink:#EDEBE6;--glow:.28;color-scheme:light}}
+:root[data-theme="light"]{--bg:#EDEBE6;--ink:#0A0A0A;--mute:#5E5B55;--dim:#8A877F;--line:#D3CFC7;--track:#BDB9B1;--alone:#7C7972;--late:#A19D95;--red:#D71921;--redbg:#EDC9C4;--fill:#DFDBD3;--inv:#0A0A0A;--invink:#EDEBE6;--glow:.28;color-scheme:light}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;overflow:hidden;background:var(--bg);color:var(--ink);font-family:'JetBrains Mono',ui-monospace,Menlo,monospace;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;overscroll-behavior:none}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
+.doto{font-family:'Doto','JetBrains Mono',monospace;font-weight:900}
+#v{height:100dvh;overflow-y:auto;scroll-snap-type:y mandatory;scrollbar-width:none}
+#v::-webkit-scrollbar,#pg::-webkit-scrollbar{display:none}
+.scr{height:100dvh;scroll-snap-align:start;scroll-snap-stop:always}
+.in{height:100%;max-width:430px;margin:0 auto;padding:calc(env(safe-area-inset-top) + 22px) 28px calc(env(safe-area-inset-bottom) + 20px);display:flex;flex-direction:column;justify-content:space-between}
+#stats{position:relative}#sh{position:absolute;top:0;left:0;right:0;z-index:2;pointer-events:none}.shin{max-width:430px;margin:0 auto;padding:calc(env(safe-area-inset-top) + 22px) 28px 0;display:flex;justify-content:space-between;align-items:center;pointer-events:auto}
+#pg{height:100%;display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none}
+.pgp{flex:0 0 100vw;height:100%;scroll-snap-align:center;scroll-snap-stop:always}
+.top{display:flex;justify-content:space-between;align-items:center;font-size:12px;letter-spacing:1.5px;color:var(--mute);min-height:44px}
+.lab{font-size:12px;letter-spacing:2px;color:var(--mute)}
+.ringw{align-self:center;width:min(320px,82vw);aspect-ratio:1;position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px}
+.ringw svg{position:absolute;inset:0;width:100%;height:100%}
+.ringw .nm{font-size:min(88px,22vw);line-height:.85;position:relative;pointer-events:none}
+.ringw .sb{font-size:13px;letter-spacing:1.5px;color:var(--mute);position:relative;pointer-events:none}
+.hit{stroke:transparent;stroke-width:44;fill:none;pointer-events:stroke}
+.more{align-self:center;min-height:44px;padding:0 20px;color:var(--mute);font-size:11px;letter-spacing:3px;display:flex;flex-direction:column;align-items:center;gap:8px}
+.more i{width:36px;height:4px;border-radius:2px;background:var(--track)}
+.hold{align-self:center;width:148px;height:148px;border-radius:50%;position:relative;display:flex;align-items:center;justify-content:center;touch-action:none}
+.hold svg{position:absolute;inset:0}
+.hold span{width:116px;height:116px;border-radius:50%;background:var(--ink);color:var(--bg);font-size:14px;font-weight:700;letter-spacing:3px;display:flex;align-items:center;justify-content:center;transition:transform .15s}
+.hold.dn span{transform:scale(.94)}
+.hold[disabled] span{background:var(--fill);color:var(--dim)}
+.bj{height:84px;border-radius:42px;background:var(--ink);color:var(--bg);font-size:17px;font-weight:700;letter-spacing:3px;box-shadow:0 0 28px color-mix(in srgb,var(--ink) 35%,transparent)}
+.ba{height:56px;border-radius:28px;border:1px solid var(--track);color:var(--mute);font-size:14px;letter-spacing:3px}
+.col{display:flex;flex-direction:column}
+.row{display:grid;grid-template-columns:1fr 84px 84px;padding:15px 0;border-bottom:1px solid var(--line);font-size:14px;text-align:left;width:100%}
+.row b{font-weight:700}.row span:nth-child(2){color:var(--late)}.row span:nth-child(3){text-align:right}
+.pd{display:flex;gap:6px}.pd i{width:6px;height:6px;border-radius:3px;background:var(--track);transition:width .2s}.pd i.on{width:18px;background:var(--ink)}
+@keyframes flash{0%{opacity:0}30%{opacity:1}100%{opacity:var(--glow)}}
+.fl{animation:flash .9s ease-out}
+@keyframes pz{0%,100%{opacity:.25}50%{opacity:1}}
+.pz{animation:pz 1.6s ease-in-out infinite}
+#fx{position:fixed;inset:0;z-index:20;display:none;background:transparent;transition:opacity .7s}
+#fx.on{display:block}
+#fxb{position:absolute;border-radius:50%;background:var(--inv);transform:scale(0);transition:transform 1s cubic-bezier(.7,0,.3,1)}
+#fx.fl2 #fxb{transform:scale(9)}
+#fxs{position:absolute;transition:transform 1s cubic-bezier(.65,0,.25,1)}
+#fxc{stroke:var(--ink);stroke-dashoffset:360;transition:stroke-dashoffset var(--cd,1.3s) cubic-bezier(.6,0,.25,1),stroke .5s}
+#fx.cl #fxc{stroke-dashoffset:0}
+#fx.fl2 #fxc{stroke:var(--invink)}
+#fx.fl2 #fxs{transform:translateY(-18vh) scale(.42)}
+#fx.out{opacity:0}
+#set{position:fixed;inset:0;z-index:30;background:var(--bg);display:none;overflow-y:auto}
+#set.on{display:block}
+.seg{display:flex;border:1px solid var(--track);border-radius:22px;overflow:hidden}
+.seg button{flex:1;height:44px;font-size:12px;letter-spacing:2px;color:var(--mute)}
+.seg button.on{background:var(--ink);color:var(--bg)}
+.adj{display:grid;grid-template-columns:1fr 44px 84px 44px;align-items:center;padding:6px 0;border-bottom:1px solid var(--line);font-size:14px}
+.adj button{height:44px;font-size:20px;color:var(--mute)}
+.adj span{text-align:center}
+@media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div id="v"><section class="scr" id="home"></section><section class="scr" id="stats"><div id="sh"><div class="shin"><button data-act="up" style="min-height:44px;color:var(--mute);font-size:11px;letter-spacing:3px">↓ TODAY</button><div class="pd" id="pd"><i class="on"></i><i></i><i></i><i></i><i></i><i></i></div></div></div><div id="pg"></div></section></div>
+<div id="fx"><div id="fxb"></div><svg id="fxs" viewBox="0 0 320 320"><circle id="fxc" cx="160" cy="160" r="140" fill="none" stroke-width="10" stroke-linecap="round" pathLength="360" stroke-dasharray="360" transform="rotate(-90 160 160)"/></svg></div>
+<div id="set"></div>
+<script>
+// Prayer times engine (PrayTimes.org algorithm). Karachi method: Fajr 18°, Isha 18°, Asr Hanafi (factor 2).
+const PT = (() => {
+  const rad = d => d * Math.PI / 180, deg = r => r * 180 / Math.PI;
+  const sin = d => Math.sin(rad(d)), cos = d => Math.cos(rad(d)), tan = d => Math.tan(rad(d));
+  const asin = x => deg(Math.asin(x)), acos = x => deg(Math.acos(x)), atan2 = (y, x) => deg(Math.atan2(y, x));
+  const acot = x => deg(Math.atan(1 / x));
+  const fix = (a, b) => { a = a - b * Math.floor(a / b); return a < 0 ? a + b : a; };
+  function julian(y, m, d) {
+    if (m <= 2) { y -= 1; m += 12; }
+    const A = Math.floor(y / 100), B = 2 - A + Math.floor(A / 4);
+    return Math.floor(365.25 * (y + 4716)) + Math.floor(30.6001 * (m + 1)) + d + B - 1524.5;
+  }
+  function sunPos(jd) {
+    const D = jd - 2451545.0;
+    const g = fix(357.529 + 0.98560028 * D, 360), q = fix(280.459 + 0.98564736 * D, 360);
+    const L = fix(q + 1.915 * sin(g) + 0.020 * sin(2 * g), 360);
+    const e = 23.439 - 0.00000036 * D;
+    const RA = fix(atan2(cos(e) * sin(L), cos(L)) / 15, 24);
+    return { decl: asin(sin(e) * sin(L)), eqt: q / 15 - RA };
+  }
+  // returns hours (local, decimal) for y-m-d
+  function times(y, m, d, lat = 24.8607, lng = 67.0011, tz = 5) {
+    const jDate = julian(y, m, d) - lng / (15 * 24);
+    const midDay = t => fix(12 - sunPos(jDate + t).eqt, 24);
+    const angleTime = (angle, t, ccw) => {
+      const decl = sunPos(jDate + t).decl, noon = midDay(t);
+      const h = acos((-sin(angle) - sin(decl) * sin(lat)) / (cos(decl) * cos(lat))) / 15;
+      return noon + (ccw ? -h : h);
+    };
+    const asrTime = (factor, t) => {
+      const decl = sunPos(jDate + t).decl;
+      return angleTime(-acot(factor + tan(Math.abs(lat - decl))), t);
+    };
+    let t = { fajr: 5, sunrise: 6, dhuhr: 12, asr: 13, maghrib: 18, isha: 18 };
+    for (let i = 0; i < 2; i++) {
+      const p = {}; for (const k in t) p[k] = t[k] / 24;
+      t = {
+        fajr: angleTime(18, p.fajr, true),
+        sunrise: angleTime(0.833, p.sunrise, true),
+        dhuhr: midDay(p.dhuhr),
+        asr: asrTime(2, p.asr),
+        maghrib: angleTime(0.833, p.maghrib),
+        isha: angleTime(18, p.isha),
+      };
+    }
+    const adj = tz - lng / 15;
+    for (const k in t) t[k] += adj;
+    return t;
+  }
+  return { times };
+})();
+const P=['fajr','zuhr','asr','maghrib','isha'],NM={fajr:'FAJR',zuhr:'ZUHR',asr:'ASR',maghrib:'MAGHRIB',isha:'ISHA'};
+const TZ=5,H=3600e3,DAY=864e5,$=s=>document.querySelector(s);
+const REM=[
+['AYAH · AL-BAQARAH 2:153','يَا أَيُّهَا الَّذِينَ آمَنُوا اسْتَعِينُوا بِالصَّبْرِ وَالصَّلَاةِ ۚ إِنَّ اللَّهَ مَعَ الصَّابِرِينَ','Aye imaan walo! Sabr aur namaz se madad lo. Beshak Allah sabr karne walon ke saath hai.'],
+['AYAH · TA-HA 20:14','إِنَّنِي أَنَا اللَّهُ لَا إِلَٰهَ إِلَّا أَنَا فَاعْبُدْنِي وَأَقِمِ الصَّلَاةَ لِذِكْرِي','Beshak main hi Allah hoon, mere siwa koi mabood nahi. To meri ibadat karo aur meri yaad ke liye namaz qaim karo.'],
+['AYAH · AL-ANKABUT 29:45','إِنَّ الصَّلَاةَ تَنْهَىٰ عَنِ الْفَحْشَاءِ وَالْمُنكَرِ','Beshak namaz behayai aur burai se rokti hai.'],
+['AYAH · AN-NISA 4:103','إِنَّ الصَّلَاةَ كَانَتْ عَلَى الْمُؤْمِنِينَ كِتَابًا مَّوْقُوتًا','Beshak namaz momino par muqarrar waqt par farz hai.'],
+['AYAH · AL-BAQARAH 2:238','حَافِظُوا عَلَى الصَّلَوَاتِ وَالصَّلَاةِ الْوُسْطَىٰ وَقُومُوا لِلَّهِ قَانِتِينَ','Sab namazon ki hifazat karo, khaas kar darmiyani namaz ki, aur Allah ke samne adab se khare raho.'],
+['AYAH · AR-RA\'D 13:28','أَلَا بِذِكْرِ اللَّهِ تَطْمَئِنُّ الْقُلُوبُ','Sun lo! Allah ki yaad hi se dilon ko itminan milta hai.'],
+['AYAH · AL-BAQARAH 2:45','وَاسْتَعِينُوا بِالصَّبْرِ وَالصَّلَاةِ ۚ وَإِنَّهَا لَكَبِيرَةٌ إِلَّا عَلَى الْخَاشِعِينَ','Sabr aur namaz se madad lo. Aur yeh bhari hai, magar aajizi karne walon par nahi.'],
+['HADITH · SAHIH AL-BUKHARI 645','صَلاَةُ الْجَمَاعَةِ تَفْضُلُ صَلاَةَ الْفَذِّ بِسَبْعٍ وَعِشْرِينَ دَرَجَةً','Jamaat ki namaz akele ki namaz se 27 darje zyada afzal hai.'],
+['HADITH · SAHIH MUSLIM 783','أَحَبُّ الأَعْمَالِ إِلَى اللَّهِ تَعَالَى أَدْوَمُهَا وَإِنْ قَلَّ','Allah ko sab se pyara amal woh hai jo hamesha kiya jaye, chahe thora ho.'],
+['AYAH · IBRAHIM 14:40','رَبِّ اجْعَلْنِي مُقِيمَ الصَّلَاةِ وَمِن ذُرِّيَّتِي ۚ رَبَّنَا وَتَقَبَّلْ دُعَاءِ','Aye mere Rab! Mujhe namaz qaim karne wala bana, aur meri aulad ko bhi. Aye hamare Rab! Meri dua qubool farma.'],
+['AYAH · AL-MU\'MINUN 23:1-2','قَدْ أَفْلَحَ الْمُؤْمِنُونَ ۝ الَّذِينَ هُمْ فِي صَلَاتِهِمْ خَاشِعُونَ','Yaqeenan kamyab ho gaye imaan wale, jo apni namaz mein aajizi karte hain.'],
+['AYAH · ASH-SHARH 94:6','إِنَّ مَعَ الْعُسْرِ يُسْرًا','Beshak har mushkil ke saath aasani hai.']];
+const OFF=(()=>{const t=new URLSearchParams(location.search).get('t');return t?Date.parse(t)-Date.now():0})(),now_=()=>Date.now()+OFF;
+let S={days:{},cfg:{off:{},theme:'auto'},api:'',q:[],start:0};
+try{Object.assign(S,JSON.parse(localStorage.getItem('nz')||'{}'))}catch(e){}
+S.cfg=S.cfg||{off:{},theme:'auto'};S.cfg.off=S.cfg.off||{};S.q=S.q||[];S.days=S.days||{};
+const persist=()=>{try{localStorage.setItem('nz',JSON.stringify(S))}catch(e){}};
+(()=>{const a=new URLSearchParams(location.search).get('api');if(a){S.api='https://script.google.com/macros/s/'+a+'/exec';persist()}})();
+let sel=null,choice=null,holding=false,forceRing=false,recapDay=null,recapWeek=false,remI=Math.floor(now_()/DAY)%REM.length,flashP=null,page=0;
+const pad=n=>String(n).padStart(2,'0'),keyOf=(y,m,d)=>`${y}-${pad(m)}-${pad(d)}`;
+const parts=k=>{const[y,m,d]=k.split('-').map(Number);return{y,m,d}};
+function addDays(k,n){const{y,m,d}=parts(k),t=new Date(Date.UTC(y,m-1,d)+n*DAY);return keyOf(t.getUTCFullYear(),t.getUTCMonth()+1,t.getUTCDate())}
+function pk(ms){const t=new Date(ms+TZ*H);return keyOf(t.getUTCFullYear(),t.getUTCMonth()+1,t.getUTCDate())}
+let wc={};
+function win(k){
+  if(wc[k])return wc[k];
+  const{y,m,d}=parts(k),base=Date.UTC(y,m-1,d)-TZ*H,t=PT.times(y,m,d),n=parts(addDays(k,1)),tn=PT.times(n.y,n.m,n.d),o=p=>(S.cfg.off[p]||0)*6e4,at=h=>base+h*H;
+  const s={fajr:at(t.fajr)+o('fajr'),zuhr:at(t.dhuhr)+o('zuhr'),asr:at(t.asr)+o('asr'),maghrib:at(t.maghrib)+o('maghrib'),isha:at(t.isha)+o('isha')};
+  return wc[k]={fajr:[s.fajr,at(t.sunrise)],zuhr:[s.zuhr,s.asr],asr:[s.asr,s.maghrib],maghrib:[s.maghrib,s.isha],isha:[s.isha,base+DAY+tn.fajr*H+o('fajr')],recapAt:base+23.5*H};
+}
+function dayKey(ms){const k=pk(ms);return ms<win(k).fajr[0]?addDays(k,-1):k}
+function clock(ms){const t=new Date(Math.round(ms/6e4)*6e4+TZ*H);let h=t.getUTCHours(),mi=t.getUTCMinutes(),ap=h<12?'AM':'PM';h=h%12||12;return`${h}:${pad(mi)} ${ap}`}
+function hhmm(ms){const t=new Date(ms+TZ*H);return pad(t.getUTCHours())+':'+pad(t.getUTCMinutes())}
+function span(ms){const m=Math.max(0,Math.round(ms/6e4));if(m<60)return m+'M';const h=Math.floor(m/60),r=m%60;return r?`${h}H ${r}M`:`${h}H`}
+function dlabel(k){const{y,m,d}=parts(k);return new Date(Date.UTC(y,m-1,d,12)).toLocaleDateString('en-GB',{timeZone:'UTC',weekday:'short',day:'numeric',month:'short'}).replace(',','').toUpperCase()}
+const dow=k=>{const{y,m,d}=parts(k);return new Date(Date.UTC(y,m-1,d)).getUTCDay()};
+const pname=(k,p)=>p==='zuhr'&&dow(k)===5?'JUMUAH':NM[p];
+const rec=(k,p)=>{const d=S.days[k];return d&&d[p]&&d[p].s?d[p]:null};
+// status: J O L logged · N open now · U upcoming · X missed · - not tracked
+function st(k,p,now){const r=rec(k,p);if(r)return r.s;const[s,e]=win(k)[p];if(!S.start||e<=S.start)return now>e?'-':(now<s?'U':'N');if(now<s)return'U';if(now<=e)return'N';return'X'}
+function sum(k,now){const o={J:0,O:0,L:0,X:0,N:0,U:0,'-':0,st:[]};for(const p of P){const s=st(k,p,now);o[s]++;o.st.push(s)}o.n=o.J+o.O+o.L;o.on=o.J+o.O;o.due=o.n+o.X;
+  o.b=o.n===5?(o.J===5?'P':o.L===0?(o.J>=2?'G':'D'):'K'):(o['-']?'':(o.n>=3?'B':''));return o}
+function firstDay(){let f=null;for(const k in S.days)if(P.some(p=>rec(k,p))&&(!f||k<f))f=k;return f}
+function chain(now){const today=dayKey(now),f=firstDay();let c=0,best=0,miss=0,xp=0,first5=false,rec_=false;if(!f)return{c,best,xp,first5,rec_};
+  for(let k=f;k<=today;k=addDays(k,1)){const s=sum(k,now);if(s.L)rec_=true;xp+={P:50,G:30,D:20,K:10,B:5,'':0}[s.b];
+    if(s.n===5){c++;miss=0;first5=true}else if(k<today&&!s['-']){miss++;if(miss>=2)c=0}best=Math.max(best,c)}
+  return{c,best,xp,first5,rec_}}
+// ---------- sync ----------
+function enc(r){return r?r.s+' '+hhmm(r.t):''}
+function push(k,p){if(!S.api)return;S.q.push([k,p,enc(rec(k,p))]);persist();flush()}
+let busy=false;
+async function flush(){if(busy||!S.api||!S.q.length)return;busy=true;try{while(S.q.length){const[k,p,v]=S.q[0];const r=await fetch(`${S.api}?a=set&d=${k}&p=${p}&v=${encodeURIComponent(v)}`);if(!r.ok)throw 0;await r.text();S.q.shift();persist()}}catch(e){}busy=false}
+async function pull(){if(!S.api)return;try{const r=await fetch(S.api+'?a=all'),j=await r.json();let ch=false;const pend=new Set(S.q.map(q=>q[0]+q[1]));
+  for(const k in j.days||{})for(const p of P){const v=j.days[k][p];if(!v||pend.has(k+p)||rec(k,p))continue;const[s,tm]=v.split(' ');if(!'JOL'.includes(s))continue;const[hh,mm]=(tm||'12:00').split(':').map(Number),{y,m,d}=parts(k);let t=Date.UTC(y,m-1,d,hh,mm)-TZ*H;if(t<win(k).fajr[0])t+=DAY;
+    (S.days[k]=S.days[k]||{})[p]={s,t};if(!S.start||win(k)[p][0]<S.start)S.start=win(k)[p][0];ch=true}
+  if(ch){persist();render()}}catch(e){}}
+// ---------- actions ----------
+function setRec(k,p,v){(S.days[k]=S.days[k]||{})[p]=v;if(v&&(!S.start||win(k)[p][0]<S.start))S.start=win(k)[p][0];persist();push(k,p)}
+function buzz(a){try{navigator.vibrate&&navigator.vibrate(a)}catch(e){}}
+function target(now,today){if(choice)return choice.p;if(sel)return sel;const w=win(today);for(const p of P)if(st(today,p,now)==='N')return p;for(const p of P)if(st(today,p,now)==='U')return p;return'isha'}
+function logHold(){const now=now_(),today=dayKey(now),p=target(now,today),[s,e]=win(today)[p],late=now>e;
+  setRec(today,p,{s:late?'L':'O',t:now});buzz(late?30:[20,40,60]);flashP=p;
+  choice={p,late,timer:setTimeout(()=>finish(),5000)};render()}
+function choose(s){if(!choice)return;const now=now_(),today=dayKey(now),r=rec(today,choice.p);if(r&&r.s!==s)setRec(today,choice.p,{s,t:r.t});if(s==='J')buzz([30,50,90]);finish()}
+function finish(){if(!choice)return;clearTimeout(choice.timer);const p=choice.p;choice=null;sel=null;forceRing=false;flashP=p;const now=now_(),today=dayKey(now),s=sum(today,now);
+  if(s.n===5){celebrate(s.J===5)}else{sel=p;render();setTimeout(()=>{if(sel===p&&!choice&&!holding){sel=null;render()}},7000)}}
+function undo(p){const today=dayKey(now_());setRec(today,p,null);sel=null;render()}
+function celebrate(perfect){render(true);const fx=$('#fx'),r=$('#ring').getBoundingClientRect(),sv=$('#fxs'),b=$('#fxb');
+  sv.style.cssText=`left:${r.left}px;top:${r.top}px;width:${r.width}px;height:${r.height}px`;const d=r.width*.8;b.style.cssText=`left:${r.left+r.width/2-d/2}px;top:${r.top+r.height/2-d/2}px;width:${d}px;height:${d}px`;
+  fx.style.setProperty('--cd',perfect?'2s':'1.3s');fx.className='on';requestAnimationFrame(()=>requestAnimationFrame(()=>fx.classList.add('cl')));
+  const t1=perfect?2100:1400;setTimeout(()=>{fx.classList.add('fl2');buzz([40,60,120])},t1);
+  setTimeout(()=>{render();fx.classList.add('out')},t1+(perfect?2200:1500));setTimeout(()=>{fx.className=''},t1+(perfect?3000:2300))}
+// ---------- drawing ----------
+const GL='<defs><filter id="g" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="6"/></filter></defs>';
+const B='pathLength="360" transform="rotate(-90 160 160)" stroke-linecap="round" fill="none"';
+const seg=(c,w,s,l,x='')=>`<circle cx="160" cy="160" r="140" stroke="${c}" stroke-width="${w}" ${B} stroke-dasharray="${l.toFixed(1)} 360" stroke-dashoffset="${(-s).toFixed(1)}" ${x}/>`;
+const dash=(c,w,st,pat)=>`<circle cx="160" cy="160" r="140" stroke="${c}" stroke-width="${w}" ${B} stroke-dasharray="${pat}" stroke-dashoffset="${-st}"/>`;
+function arc(i,s,frac,fl){const a=i*72+5,L=62;
+  if(s==='J')return seg('var(--ink)',16,a,L,`filter="url(#g)" opacity="var(--glow)" ${fl?'class="fl"':''}`)+seg('var(--ink)',12,a,L);
+  if(s==='O')return seg('var(--alone)',8,a,L);
+  if(s==='L')return dash('var(--late)',8,a,'0.1 6 '.repeat(10)+'0.1 360');
+  if(s==='N')return seg('var(--redbg)',8,a,L)+seg('var(--red)',8,a+L*frac,Math.max(.5,L*(1-frac)));
+  if(s==='X')return dash('var(--dim)',3,a,'3 5 '.repeat(7)+'3 360');
+  return seg('var(--track)',3,a,L)}
+function ringSvg(k,now,tp){const w=win(k);let o=GL;
+  P.forEach((p,i)=>{const s=st(k,p,now),[a,b]=w[p];o+=arc(i,s,s==='N'?Math.min(1,(now-a)/(b-a)):0,flashP===p);
+    const an=(i*72+36-90)*Math.PI/180,x=160+106*Math.cos(an),y=164+106*Math.sin(an);
+    o+=`<text x="${x.toFixed(0)}" y="${y.toFixed(0)}" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="11" font-weight="700" fill="${p===tp?'var(--ink)':'var(--mute)'}">${p===tp?'•':''}${NM[p][0]}</text>`;
+    o+=`<circle class="hit" data-sel="${p}" cx="160" cy="160" r="140" pathLength="360" transform="rotate(-90 160 160)" stroke-dasharray="72 360" stroke-dashoffset="${-(i*72)}"/>`});
+  return`<svg id="ring" viewBox="0 0 320 320">${o}</svg>`}
+function chip(now){const c=chain(now).c;return`<div style="display:flex;align-items:center;gap:7px;color:var(--ink)"><svg width="12" height="12" viewBox="0 0 12 12"><circle cx="6" cy="6" r="4.5" fill="none" stroke="currentColor" stroke-width="2"/></svg>${c} ${c===1?'DAY':'DAYS'}</div>`}
+const GEAR='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/></svg>';
+const more='<button class="more" data-act="down"><i></i>↑ MORE</button>';
+function homeHtml(now,today,forceR){
+  const w=win(today),night=!forceR&&!forceRing&&!sel&&!choice&&(rec(today,'isha')||now>=w.recapAt);
+  if(night)return`<div class="in">${recapHtml(today,now,true)}${more}</div>`;
+  const p=target(now,today),s=st(today,p,now),[a,b]=w[p],r=rec(today,p);let sub,bottom;
+  if(choice)sub=choice.late?'LOGGED':'ON TIME ✓';else if(r)sub=({J:'JAMAAT',O:'ON TIME',L:'LATE'})[r.s]+' · '+clock(r.t);else if(s==='N')sub=span(b-now)+' LEFT';else if(s==='U')sub='IN '+span(a-now);else sub=s==='X'?'MISSED':'NOT LOGGED';
+  if(choice){bottom=`<div class="col" style="gap:12px"><button class="bj" data-ch="J">JAMAAT</button>${choice.late?'<button class="ba" data-ch="O">ON TIME</button><button class="ba" data-ch="L">LATE</button>':'<button class="ba" data-ch="O">ALONE</button>'}</div>`}
+  else if(r)bottom=`<div class="col" style="gap:6px;align-items:center">${nextLine(now,today)}<button data-undo="${p}" style="min-height:44px;padding:0 16px;color:var(--dim);font-size:11px;letter-spacing:2px">UNDO</button>${more}</div>`;
+  else bottom=`<div class="col" style="gap:6px"><button class="hold" id="hold" ${s==='U'?'disabled':''} aria-label="Press and hold to log"><svg viewBox="0 0 148 148"><circle cx="74" cy="74" r="68" fill="none" stroke="var(--line)" stroke-width="6"/><circle id="hp" cx="74" cy="74" r="68" fill="none" stroke="var(--ink)" stroke-width="6" stroke-linecap="round" pathLength="100" stroke-dasharray="100" stroke-dashoffset="100" transform="rotate(-90 74 74)"/></svg><span>HOLD</span></button>${more}</div>`;
+  return`<div class="in"><div class="top"><button data-act="set" aria-label="Settings" style="min-height:44px;letter-spacing:1.5px;color:var(--mute);font-size:12px;display:flex;align-items:center;gap:10px">${dlabel(today)}${GEAR}</button>${chip(now)}</div>
+  <div class="ringw">${ringSvg(today,now,p)}<div class="nm doto" style="${pname(today,p).length>5?'font-size:min(54px,13.5vw)':''}">${pname(today,p)}</div><div class="sb" ${r&&r.s==='J'?'style="color:var(--ink)"':''}>${sub}</div></div>${bottom}</div>`}
+function nextLine(now,today){const w=win(today);for(const p of P)if(!rec(today,p)&&w[p][1]>now)return`<div style="font-size:13px;letter-spacing:1.5px;color:var(--mute)">${now>=w[p][0]?'NOW':'NEXT'} · ${pname(today,p)} ${now>=w[p][0]?'':clock(w[p][0])}</div>`;return''}
+function dot(x,y,s,r=10){
+  if(s==='J')return`<circle cx="${x}" cy="${y}" r="${r+1}" fill="var(--ink)" filter="url(#g)" opacity="var(--glow)"/><circle cx="${x}" cy="${y}" r="${r}" fill="var(--ink)"/>`;
+  if(s==='O')return`<circle cx="${x}" cy="${y}" r="${r*.8}" fill="var(--alone)"/>`;
+  if(s==='L')return`<circle cx="${x}" cy="${y}" r="${r*.4}" fill="var(--late)"/>`;
+  if(s==='X')return`<circle cx="${x}" cy="${y}" r="${r*.8}" fill="none" stroke="var(--dim)" stroke-width="1.5"/>`;
+  if(s==='N')return`<circle cx="${x}" cy="${y}" r="${r*.8}" fill="none" stroke="var(--red)" stroke-width="3"/>`;
+  return`<circle cx="${x}" cy="${y}" r="2" fill="var(--track)"/>`}
+function recapHtml(k,now,isHome){const today=dayKey(now),s=sum(k,now),days=[];for(let i=6;i>=0;i--)days.push(addDays(today,-i));
+  let body;
+  if(recapWeek&&!isHome){let on=0,due=0;const rows=P.map(p=>{let a=0,d=0;days.forEach(x=>{const t=st(x,p,now);if('JOLX'.includes(t)){d++;if(t!=='X'&&t!=='L')a++}});on+=a;due+=d;return`<div class="row"><b>${NM[p]}</b><span></span><span>${a}/${d}</span></div>`}).join('');
+    body=`<div style="text-align:center"><div class="doto" style="font-size:88px;line-height:.85">${on}/${due}</div></div><div style="border-top:1px solid var(--line)">${rows}</div>`}
+  else{const rows=P.map(p=>{const r=rec(k,p),t=st(k,p,now);return`<button class="row" ${!r&&k===today&&t!=='U'?`data-sel="${p}"`:''}><b>${pname(k,p)}</b><span>${r?clock(r.t).replace(/ [AP]M/,''):''}</span><span style="color:${r?(r.s==='J'?'var(--ink)':'var(--alone)'):(t==='X'||t==='N'?'var(--red)':'var(--dim)')}">${r?({J:'JAMAAT',O:'ON TIME',L:'LATE'})[r.s]:(t==='X'?'MISSED':t==='N'?'OPEN':'—')}</span></button>`}).join('');
+    body=`<div style="text-align:center"><div class="doto" style="font-size:96px;line-height:.85">${s.n}/5</div></div><div style="border-top:1px solid var(--line)">${rows}</div>`}
+  const strip=isHome?'':`<svg width="334" height="56" viewBox="0 0 334 56" style="align-self:center;max-width:100%">${GL}${days.map((d,i)=>{const x=24+i*48,ds=sum(d,now),lv=ds.b==='P'?'J':ds.n===5?'O':ds.n>=3?'L':(ds.n||ds.X?'X':'-'),on=!recapWeek&&d===k;
+    return dot(x,16,lv,7)+(on?`<circle cx="${x}" cy="16" r="14" fill="none" stroke="var(--ink)" stroke-width="1.5"/>`:'')+`<text x="${x}" y="48" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="10" fill="${on?'var(--ink)':'var(--dim)'}">${'SMTWTFS'[dow(d)]}</text><rect data-day="${d}" x="${x-24}" y="0" width="48" height="56" fill="transparent"/>`}).join('')}</svg>`;
+  const top=isHome?`<div class="top"><button data-act="set" aria-label="Settings" style="min-height:44px;letter-spacing:1.5px;color:var(--mute);font-size:12px;display:flex;align-items:center;gap:10px">${dlabel(k)}${GEAR}</button>${chip(now)}</div>`
+   :`<div class="top"><span style="letter-spacing:2px">${recapWeek?'LAST 7 DAYS':dlabel(k)}</span><button data-act="week" aria-label="Last 7 days" style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;margin-right:-12px"><svg width="16" height="16" viewBox="0 0 16 16"><rect x="1.5" y="3" width="13" height="11.5" rx="2" fill="${recapWeek?'var(--ink)':'none'}" stroke="var(--mute)" stroke-width="1.5"/><line x1="1.5" y1="7" x2="14.5" y2="7" stroke="var(--mute)" stroke-width="1.5"/></svg></button></div>`;
+  return top+body+strip}
+function ptop(i,lab){return`<div class="col" style="gap:14px"><div style="height:44px"></div>${lab?`<div class="lab">${lab}</div>`:''}</div>`}
+function weekHtml(now,today){const days=[];for(let i=6;i>=0;i--)days.push(addDays(today,-i));let on=0,due=0,pon=0,pdue=0,svg=GL;
+  days.forEach((k,ci)=>{const s=sum(k,now);on+=s.on;due+=s.due;const cx=24+ci*46,x0=cx-20,R=`x="${x0}" y="4" width="40" height="244" rx="20"`;
+    if(s.b==='K')svg+=`<rect ${R} fill="none" stroke="var(--track)"/>`;if(s.b==='D')svg+=`<rect ${R} fill="var(--fill)" stroke="var(--dim)"/>`;
+    if(s.b==='G'||s.b==='P')svg+=`<rect ${R} fill="none" stroke="var(--ink)" stroke-width="2" filter="url(#g)" opacity="var(--glow)"/><rect ${R} fill="var(--fill)" stroke="var(--ink)" stroke-width="1.5"/>`;
+    if(s.b==='P')svg+=`<path d="M${cx} 258 l4 6 l-4 6 l-4 -6 z" fill="var(--ink)"/>`;s.st.forEach((t,ri)=>svg+=dot(cx,30+ri*48,t))});
+  for(let i=13;i>=7;i--){const s=sum(addDays(today,-i),now);pon+=s.on;pdue+=s.due}const d=on-pon;
+  return`<div class="in">${ptop(0,'THIS WEEK')}<div class="col" style="gap:6px"><div class="doto" style="font-size:84px;line-height:.85">${on}<span style="color:var(--dim)">/${due}</span></div><div style="font-size:12px;letter-spacing:1px;color:var(--mute)">ON TIME${pdue?` <span style="color:var(--ink)">${d>0?'▲':d<0?'▼':'='} ${Math.abs(d)}</span>`:''}</div></div>
+  <div class="col" style="gap:8px;align-self:center;max-width:100%"><div style="display:flex;font-size:11px;color:var(--mute)">${days.map(k=>`<div style="width:46px;text-align:center;${k===today?'color:var(--ink)':''}">${'SMTWTFS'[dow(k)]}</div>`).join('')}</div><svg width="322" height="274" viewBox="0 0 322 274" style="max-width:100%">${svg}</svg></div>
+  <div style="display:flex;justify-content:space-between;font-size:10px;letter-spacing:1px;color:var(--mute)"><span style="color:var(--ink)">● JAMAAT</span><span style="color:var(--alone)">● ON TIME</span><span>· LATE</span><span>○ MISSED</span></div></div>`}
+function stats30(now,today){const o={};for(const p of P)o[p]={J:0,O:0,L:0,X:0};for(let i=0;i<30;i++){const k=addDays(today,-i);for(const p of P){const t=st(k,p,now);if(o[p][t]!==undefined)o[p][t]++}}return o}
+function weakest(o){let w=null,wr=2;for(const p of P){const t=o[p].J+o[p].O+o[p].L+o[p].X;if(t<3)continue;const r=(o[p].J+o[p].O)/t;if(r<wr){wr=r;w=p}}return wr<1?w:null}
+function questsHtml(now,today){const c=chain(now),TH=[0,150,500,1200,2500,1e9],RN=['STARTER','STEADY','REGULAR','COMMITTED','ROOTED'];let lv=0;while(c.xp>=TH[lv+1])lv++;const pr=lv===4?1:(c.xp-TH[lv])/(TH[lv+1]-TH[lv]);
+  let run=0;for(let i=0;i<60;i++){const t=st(addDays(today,-i),'fajr',now);if(i===0&&(t==='U'||t==='N'))continue;if(t==='J'||t==='O')run++;else break}
+  const wk=weakest(stats30(now,today))||'maghrib';let won=0,fj=0;for(let i=0;i<7;i++){const k=addDays(today,-i),t=st(k,wk,now);if(t==='J'||t==='O')won++;if(st(k,'fajr',now)==='J')fj=1}
+  const q=(lab,d,T)=>{d=Math.min(d,T);const w=(334-(T-1)*6)/T;let s='';for(let i=0;i<T;i++){const x=(i*(w+6)).toFixed(1);s+=i<d?`<rect x="${x}" width="${w.toFixed(1)}" height="8" rx="4" fill="var(--ink)"/>`:i===d?`<rect class="pz" x="${x}" width="${w.toFixed(1)}" height="8" rx="4" fill="none" stroke="var(--ink)" stroke-width="1.5"/>`:`<rect x="${x}" width="${w.toFixed(1)}" height="8" rx="4" fill="var(--line)"/>`}
+    return`<div class="col" style="gap:10px"><div style="display:flex;justify-content:space-between;font-size:12px;letter-spacing:1.5px"><span>${lab}</span><span style="color:var(--dim)">${d}/${T}</span></div><svg viewBox="0 0 334 8" width="100%" height="8" preserveAspectRatio="none">${s}</svg></div>`};
+  const bd=[['5/5',c.first5],['7',c.best>=7],['↺',c.rec_],['30',c.best>=30],['66',c.best>=66]].map(([l,e],i)=>{const x=33+i*67;return e?`<circle cx="${x}" cy="34" r="27" fill="var(--ink)" filter="url(#g)" opacity="var(--glow)"/><circle cx="${x}" cy="34" r="24" fill="var(--ink)"/><text x="${x}" y="39" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="13" font-weight="700" fill="var(--bg)">${l}</text>`:`<circle cx="${x}" cy="34" r="24" fill="none" stroke="var(--track)" stroke-width="1.5" stroke-dasharray="2 4"/><text x="${x}" y="39" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="13" font-weight="700" fill="var(--track)">${l}</text>`}).join('');
+  return`<div class="in">${ptop(1,'')}<div style="align-self:center;width:200px;height:200px;position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px"><svg width="200" height="200" viewBox="0 0 200 200" style="position:absolute;inset:0"><circle cx="100" cy="100" r="90" fill="none" stroke="var(--line)" stroke-width="6"/><circle cx="100" cy="100" r="90" fill="none" stroke="var(--ink)" stroke-width="6" stroke-linecap="round" pathLength="100" stroke-dasharray="${(pr*100).toFixed(0)} 100" transform="rotate(-90 100 100)"/></svg><div class="doto" style="font-size:88px;line-height:.8">${lv+1}</div><div style="font-size:11px;letter-spacing:3px;color:var(--mute)">${RN[lv]}</div></div>
+  <div class="col" style="gap:22px">${q('FAJR ON TIME ×7',run,7)}${q(NM[wk]+' ON TIME ×5',won,5)}${q('FAJR IN JAMAAT',fj,1)}</div><svg viewBox="0 0 334 68" width="100%" style="max-height:68px">${GL}${bd}</svg></div>`}
+function byHtml(now,today){const o=stats30(now,today),wk=weakest(o);
+  const rows=P.map(p=>{const v=o[p],t=v.J+v.O+v.L+v.X;let x=0,s='';[['J','var(--ink)'],['O','var(--alone)'],['L','var(--late)'],['X','none']].forEach(([k,c])=>{if(!v[k])return;const w=200*v[k]/t;s+=`<rect x="${(x+1).toFixed(1)}" y="1" width="${Math.max(w-3,1).toFixed(1)}" height="14" rx="3" fill="${c}" ${k==='X'?'stroke="var(--dim)" stroke-width="1.5"':''}/>`;x+=w});
+    return`<div class="col" style="gap:8px;padding:14px 0;border-bottom:1px solid var(--line)"><div style="display:flex;justify-content:space-between;font-size:13px;font-weight:700;letter-spacing:1px"><span>${NM[p]}${p===wk?' <span style="color:var(--mute);font-weight:400">· WEAKEST</span>':''}</span><span style="color:var(--mute);font-weight:400">${v.X?v.X+' MISSED':''}</span></div><svg viewBox="0 0 202 16" width="100%" height="16" preserveAspectRatio="none">${t?s:'<rect x="1" y="1" width="200" height="14" rx="3" fill="var(--line)"/>'}</svg></div>`}).join('');
+  return`<div class="in">${ptop(2,'LAST 30 DAYS')}<div class="col" style="border-top:1px solid var(--line)">${rows}</div><div style="display:flex;gap:14px;font-size:9px;letter-spacing:1px;color:var(--dim)"><span>■ JAMAAT</span><span>■ ON TIME</span><span>■ LATE</span><span>□ MISSED</span></div></div>`}
+function chainHtml(now){const c=chain(now);let d=GL;for(let n=0;n<66;n++){const x=16+(n%11)*30,y=16+Math.floor(n/11)*30;d+=n<c.c?dot(x,y,'J',7):n===c.c?`<circle class="pz" cx="${x}" cy="${y}" r="7" fill="none" stroke="var(--ink)" stroke-width="2"/>`:`<circle cx="${x}" cy="${y}" r="2.5" fill="var(--track)"/>`}
+  const rl=['A day counts when no prayer is missed. Late counts.','Missed one? Pray it late the same day.','Breaks only after 2 missed days in a row.'].map((t,i)=>`<div style="display:flex;gap:12px"><span style="color:var(--dim)">0${i+1}</span><span>${t}</span></div>`).join('');
+  return`<div class="in">${ptop(3,'CHAIN')}<div style="display:flex;align-items:baseline;gap:12px"><div class="doto" style="font-size:112px;line-height:.85">${c.c}</div><div class="col" style="font-size:12px;letter-spacing:1px;color:var(--mute)"><span>${c.c===1?'DAY':'DAYS'}</span><span>BEST ${c.best}</span></div></div><svg viewBox="0 0 332 182" width="100%">${d}</svg><div class="col" style="gap:10px;font-size:12px;line-height:1.45;color:var(--mute)">${rl}</div></div>`}
+function remHtml(){const r=REM[remI];return`<div class="in">${ptop(5,"TODAY'S REMINDER")}<button data-act="rem" style="flex:1;padding:0 0 40px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:28px;text-align:center"><div style="font-size:11px;letter-spacing:3px;color:var(--mute)">${r[0]}</div><div lang="ar" dir="rtl" style="font-family:'Amiri','Geeza Pro',serif;font-size:30px;line-height:1.95">${r[1]}</div><div style="width:28px;height:1px;background:var(--dim)"></div><div style="font-family:'Instrument Serif',Georgia,serif;font-size:25px;line-height:1.4">${r[2]}</div></button><div style="text-align:center;font-size:10px;letter-spacing:3px;color:var(--dim)">TAP FOR ANOTHER</div></div>`}
+function setHtml(now,today){const w=win(today),th=S.cfg.theme||'auto';
+  return`<div class="in" style="justify-content:flex-start;gap:28px;height:auto;min-height:100%"><div class="top"><span class="lab">SETTINGS</span><button data-act="setx" style="min-height:44px;font-size:11px;letter-spacing:3px;color:var(--mute)">CLOSE</button></div>
+  <div class="col" style="gap:10px"><div class="lab">THEME</div><div class="seg">${['auto','light','dark'].map(t=>`<button data-th="${t}" class="${th===t?'on':''}">${t.toUpperCase()}</button>`).join('')}</div></div>
+  <div class="col" style="gap:6px"><div class="lab">PRAYER TIMES · KARACHI · HANAFI</div>${P.map(p=>`<div class="adj"><b>${NM[p]}</b><button data-off="${p}" data-d="-1" aria-label="Earlier">−</button><span>${clock(w[p][0])}</span><button data-off="${p}" data-d="1" aria-label="Later">+</button></div>`).join('')}</div>
+  <div style="font-size:11px;letter-spacing:1px;color:var(--dim)">${S.api?(S.q.length?'SYNC PENDING · '+S.q.length:'SYNCED'):'SAVED ON THIS PHONE ONLY'}</div></div>`}
+function applyTheme(){const t=S.cfg.theme||'auto';if(t==='auto')document.documentElement.removeAttribute('data-theme');else document.documentElement.setAttribute('data-theme',t);
+  const m=document.querySelector('meta[name=theme-color]');m&&m.setAttribute('content',getComputedStyle(document.documentElement).getPropertyValue('--bg').trim()||'#000')}
+function render(forceR){if(holding)return;const now=now_(),today=dayKey(now);if(!recapDay||recapDay>today)recapDay=today;
+  $('#home').innerHTML=homeHtml(now,today,forceR===true);const pg=$('#pg'),x=pg.scrollLeft;
+  pg.innerHTML=[weekHtml(now,today),questsHtml(now,today),byHtml(now,today),chainHtml(now),`<div class="in">${ptop(4,'')}${recapHtml(recapDay,now,false)}</div>`,remHtml()].map(h=>`<div class="pgp">${h}</div>`).join('');pg.scrollLeft=x;dots();
+  if($('#set').classList.contains('on'))$('#set').innerHTML=setHtml(now,today);flashP=null}
+function dots(){const pg=$('#pg'),i=Math.round(pg.scrollLeft/(pg.clientWidth||1));document.querySelectorAll('#pd i').forEach((e,j)=>e.classList.toggle('on',j===i))}
+$('#pg').addEventListener('scroll',dots,{passive:true});
+// ---------- events ----------
+let hraf=0,hstart=0;
+function holdStart(e){const b=e.target.closest('#hold');if(!b||b.disabled)return;e.preventDefault();const now=now_(),today=dayKey(now),last=sum(today,now).n===4;const dur=last?2500:1500;holding=true;hstart=performance.now();b.classList.add('dn');buzz(10);
+  const hp=$('#hp');(function tick(t){const f=Math.min(1,(t-hstart)/dur);hp.setAttribute('stroke-dashoffset',(100*(1-f)).toFixed(1));if(f>=1){holding=false;hraf=0;logHold();return}hraf=requestAnimationFrame(tick)})(hstart)}
+function holdEnd(){if(!holding)return;cancelAnimationFrame(hraf);holding=false;const b=$('#hold');if(b){b.classList.remove('dn');$('#hp').setAttribute('stroke-dashoffset','100')}}
+document.addEventListener('pointerdown',holdStart);['pointerup','pointercancel','pointerleave'].forEach(ev=>document.addEventListener(ev,holdEnd));
+document.addEventListener('contextmenu',e=>e.preventDefault());
+document.addEventListener('click',e=>{const t=e.target.closest('[data-act],[data-sel],[data-ch],[data-undo],[data-day],[data-th],[data-off]');if(!t)return;const d=t.dataset,now=now_(),today=dayKey(now);
+  if(d.ch)return choose(d.ch);
+  if(d.undo)return undo(d.undo);
+  if(d.sel){if(choice)return;sel=sel===d.sel&&!forceRing?null:d.sel;if(st(today,d.sel,now)==='U'&&!rec(today,d.sel))sel=null;forceRing=!!sel&&(!!rec(today,'isha')||now>=win(today).recapAt);$('#v').scrollTo({top:0,behavior:'smooth'});return render()}
+  if(d.day){recapDay=d.day;recapWeek=false;return render()}
+  if(d.th){S.cfg.theme=d.th;persist();applyTheme();return render()}
+  if(d.off){S.cfg.off[d.off]=(S.cfg.off[d.off]||0)+Number(d.d);wc={};persist();return render()}
+  const a=d.act;
+  if(a==='down')$('#v').scrollTo({top:innerHeight,behavior:'smooth'});
+  else if(a==='up')$('#v').scrollTo({top:0,behavior:'smooth'});
+  else if(a==='week'){recapWeek=!recapWeek;render()}
+  else if(a==='rem'){remI=(remI+1)%REM.length;render()}
+  else if(a==='set'){$('#set').classList.add('on');render()}
+  else if(a==='setx'){$('#set').classList.remove('on')}
+});
+applyTheme();render();pull();flush();
+setInterval(()=>{if(!choice)render()},30000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden){sel=null;forceRing=false;render();pull();flush()}});
+</script>
+</body>
+</html>

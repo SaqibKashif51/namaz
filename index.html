@@ -452,7 +452,7 @@ function setHtml(now,today){const w=win(today),th=S.cfg.theme||'auto';
   return`<div class="in" style="justify-content:flex-start;gap:28px;height:auto;min-height:100%"><div class="top"><span class="lab">SETTINGS</span><button data-act="setx" style="min-height:44px;font-size:11px;letter-spacing:3px;color:var(--mute)">CLOSE</button></div>
   <div class="col" style="gap:10px"><div class="lab">THEME</div><div class="seg">${['auto','light','dark'].map(t=>`<button data-th="${t}" class="${th===t?'on':''}">${t.toUpperCase()}</button>`).join('')}</div></div>
   <div class="col" style="gap:6px"><div class="lab">PRAYER TIMES · KARACHI · HANAFI</div>${P.map(p=>`<div class="adj"><b>${NM[p]}</b><button data-off="${p}" data-d="-1" aria-label="Earlier">−</button><span>${clock(w[p][0])}</span><button data-off="${p}" data-d="1" aria-label="Later">+</button></div>`).join('')}</div>
-  <div style="font-size:11px;letter-spacing:1px;color:var(--dim)">${S.api?(S.q.length?'SYNC PENDING · '+S.q.length:'SYNCED'):'SAVED ON THIS PHONE ONLY'} · B5 · ${innerWidth}×${innerHeight}/${$('#v').clientHeight}</div></div>`}
+  <div style="font-size:11px;letter-spacing:1px;color:var(--dim)">${S.api?(S.q.length?'SYNC PENDING · '+S.q.length:'SYNCED'):'SAVED ON THIS PHONE ONLY'}</div></div>`}
 function applyTheme(){const t=S.cfg.theme||'auto';if(t==='auto')document.documentElement.removeAttribute('data-theme');else document.documentElement.setAttribute('data-theme',t);
   const m=document.querySelector('meta[name=theme-color]');m&&m.setAttribute('content',getComputedStyle(document.documentElement).getPropertyValue('--bg').trim()||'#000')}
 function render(forceR){if(holding)return;const now=now_(),today=dayKey(now);if(!recapDay||recapDay>today)recapDay=today;

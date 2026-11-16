@@ -332,7 +332,7 @@ function push(k,p){if(!S.api)return;S.q.push([k,p,enc(rec(k,p))]);persist();flus
 let busy=false;
 async function flush(){if(busy||!S.api||!S.q.length)return;busy=true;try{while(S.q.length){const[k,p,v]=S.q[0];const r=await fetch(`${S.api}?a=set&d=${k}&p=${p}&v=${encodeURIComponent(v)}`);if(!r.ok)throw 0;await r.text();S.q.shift();persist()}}catch(e){}busy=false}
 async function pull(){if(!S.api)return;try{const r=await fetch(S.api+'?a=all'),j=await r.json();let ch=false;const pend=new Set(S.q.map(q=>q[0]+q[1]));
-  for(const k in j.days||{})for(const p of P){const v=j.days[k][p];if(!v||pend.has(k+p)||rec(k,p))continue;const[s,tm]=v.split(' ');if(!'JOL'.includes(s))continue;const[hh,mm]=(tm||'12:00').split(':').map(Number),{y,m,d}=parts(k);let t=Date.UTC(y,m-1,d,hh,mm)-TZ*H;if(t<win(k).fajr[0])t+=DAY;
+  for(const k in j.days||{})for(const p of P){const v=j.days[k][p];if(!v||pend.has(k+p))continue;const[s,tm]=v.split(' ');if(!'JOL'.includes(s))continue;const lr=rec(k,p);if(lr&&lr.s===s)continue;const[hh,mm]=(tm||'12:00').split(':').map(Number),{y,m,d}=parts(k);let t=Date.UTC(y,m-1,d,hh,mm)-TZ*H;if(t<win(k).fajr[0])t+=DAY;
     (S.days[k]=S.days[k]||{})[p]={s,t};if(!S.start||win(k)[p][0]<S.start)S.start=win(k)[p][0];ch=true}
   if(ch){persist();render()}}catch(e){}}
 // ---------- actions ----------
@@ -346,7 +346,7 @@ function target(now,today){if(choice)return choice.p;if(sel)return sel;const w=w
 function logHold(){const now=now_(),today=dayKey(now),p=target(now,today),[s,e]=win(today)[p],late=now>e;
   setRec(today,p,{s:late?'L':'O',t:now});buzz(late?30:[20,40,60]);flashP=p;
   choice={p,late,timer:setTimeout(()=>finish(),5000)};render()}
-function choose(s){if(!choice)return;const now=now_(),today=dayKey(now),r=rec(today,choice.p);if(r&&r.s!==s)setRec(today,choice.p,{s,t:r.t});if(s==='J')buzz([30,50,90]);finish()}
+function choose(s){if(!choice||!choice.armed)return;const now=now_(),today=dayKey(now),r=rec(today,choice.p);if(r&&r.s!==s)setRec(today,choice.p,{s,t:r.t});if(s==='J')buzz([30,50,90]);finish()}
 function finish(){if(!choice)return;clearTimeout(choice.timer);const p=choice.p;choice=null;sel=null;forceRing=false;flashP=p;const now=now_(),today=dayKey(now),s=sum(today,now);
   if(s.n===5){celebrate(s.J===5)}else{sel=p;render();setTimeout(()=>{if(sel===p&&!choice&&!holding){sel=null;render()}},7000)}}
 function undo(p){const today=dayKey(now_());setRec(today,p,null);sel=null;render()}
@@ -480,7 +480,8 @@ let hraf=0,hstart=0;
 function holdStart(e){const b=e.target.closest('#hold');if(!b||b.disabled)return;e.preventDefault();const now=now_(),today=dayKey(now),last=sum(today,now).n===4;const dur=last?2500:1500;holding=true;hstart=performance.now();b.classList.add('dn');buzz(10);
   const hp=$('#hp');(function tick(t){const f=Math.min(1,(t-hstart)/dur);hp.setAttribute('stroke-dashoffset',(100*(1-f)).toFixed(1));if(f>=1){holding=false;hraf=0;logHold();return}hraf=requestAnimationFrame(tick)})(hstart)}
 function holdEnd(){if(!holding)return;cancelAnimationFrame(hraf);holding=false;const b=$('#hold');if(b){b.classList.remove('dn');$('#hp').setAttribute('stroke-dashoffset','100')}}
-document.addEventListener('pointerdown',holdStart);['pointerup','pointercancel','pointerleave'].forEach(ev=>document.addEventListener(ev,holdEnd));
+// a choice only counts from a fresh touch, not the finger lifting off after the hold
+document.addEventListener('pointerdown',()=>{if(choice&&!holding)choice.armed=true},true);document.addEventListener('pointerdown',holdStart);['pointerup','pointercancel','pointerleave'].forEach(ev=>document.addEventListener(ev,holdEnd));
 document.addEventListener('contextmenu',e=>e.preventDefault());
 document.addEventListener('click',e=>{const t=e.target.closest('[data-act],[data-sel],[data-ch],[data-undo],[data-day],[data-th],[data-off],[data-jam]');if(!t)return;const d=t.dataset,now=now_(),today=dayKey(now);
   if(d.ch)return choose(d.ch);

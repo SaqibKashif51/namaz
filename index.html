@@ -338,7 +338,11 @@ async function pull(){if(!S.api)return;try{const r=await fetch(S.api+'?a=all'),j
 // ---------- actions ----------
 function setRec(k,p,v){(S.days[k]=S.days[k]||{})[p]=v;if(v&&(!S.start||win(k)[p][0]<S.start))S.start=win(k)[p][0];persist();push(k,p)}
 function buzz(a){try{navigator.vibrate&&navigator.vibrate(a)}catch(e){}}
-function target(now,today){if(choice)return choice.p;if(sel)return sel;const w=win(today);for(const p of P)if(st(today,p,now)==='N')return p;for(const p of P)if(st(today,p,now)==='U')return p;return'isha'}
+// jamaat time of p (ms). Custom = minutes of day in S.cfg.jam; Zuhr default 1:15 PM; others start + offset, rounded to 5 min
+function jam(k,p){const w=win(k),{y,m,d}=parts(k),base=Date.UTC(y,m-1,d)-TZ*H,c=(S.cfg.jam||{})[p];if(c!=null)return Math.max(w[p][0],base+c*6e4);if(p==='zuhr')return Math.max(w.zuhr[0],base+795*6e4);return Math.ceil((w[p][0]+({fajr:30,asr:15,maghrib:5,isha:20})[p]*6e4)/3e5)*3e5}
+// previous unlogged prayer stays on screen until the next prayer's jamaat
+function grace(now,today){const w=win(today);for(let i=0;i<4;i++){const p=P[i];if(now>=w[p][0]&&!rec(today,p)&&st(today,p,now)!=='-'&&now<jam(today,P[i+1]))return p}return null}
+function target(now,today){if(choice)return choice.p;if(sel)return sel;const w=win(today),g=grace(now,today);if(g)return g;for(const p of P)if(st(today,p,now)==='N')return p;for(const p of P)if(st(today,p,now)==='U')return p;return'isha'}
 function logHold(){const now=now_(),today=dayKey(now),p=target(now,today),[s,e]=win(today)[p],late=now>e;
   setRec(today,p,{s:late?'L':'O',t:now});buzz(late?30:[20,40,60]);flashP=p;
   choice={p,late,timer:setTimeout(()=>finish(),5000)};render()}
@@ -376,7 +380,7 @@ function homeHtml(now,today,forceR){
   const w=win(today),night=!forceR&&!forceRing&&!sel&&!choice&&(rec(today,'isha')||now>=w.recapAt);
   if(night){const an=lastKey!=='N';lastKey='N';return`<div class="in${an?' sw':''}">${recapHtml(today,now,true)}${more}</div>`}
   const p=target(now,today),s=st(today,p,now),[a,b]=w[p],r=rec(today,p);let sub,bottom;const key=[today,p,choice?'c':r?'r':'h'].join(),an=key!==lastKey;lastKey=key;const A1=an?' sw':'',A2=an?' sw2':'';
-  if(choice)sub=choice.late?'LOGGED':'ON TIME <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px" aria-hidden="true"><path d="M4 12.5l5 5L20 6.5"/></svg>';else if(r)sub=({J:'JAMAAT',O:'ON TIME',L:'LATE'})[r.s]+' · '+clock(r.t);else if(s==='N')sub=span(b-now)+' LEFT';else if(s==='U')sub='IN '+span(a-now);else sub=s==='X'?'MISSED':'NOT LOGGED';
+  if(choice)sub=choice.late?'LOGGED':'ON TIME <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px" aria-hidden="true"><path d="M4 12.5l5 5L20 6.5"/></svg>';else if(r)sub=({J:'JAMAAT',O:'ON TIME',L:'LATE'})[r.s]+' · '+clock(r.t);else if(s==='N')sub=span(b-now)+' LEFT';else if(s==='U')sub='IN '+span(a-now);else if(s==='X'&&grace(now,today)===p)sub='LOG BY '+clock(jam(today,P[P.indexOf(p)+1]));else sub=s==='X'?'MISSED':'NOT LOGGED';
   if(choice){bottom=`<div class="col${A2}" style="gap:12px"><button class="bj" data-ch="J">JAMAAT</button>${choice.late?'<button class="ba" data-ch="O">ON TIME</button><button class="ba" data-ch="L">LATE</button>':'<button class="ba" data-ch="O">ALONE</button>'}<div class="drain"></div></div>`}
   else if(r)bottom=`<div class="col${A2}" style="gap:6px;align-items:center">${nextLine(now,today)}<button data-undo="${p}" style="min-height:44px;padding:0 16px;color:var(--dim);font-size:11px;letter-spacing:2px">UNDO</button>${more}</div>`;
   else bottom=`<div class="col${A2}" style="gap:6px"><button class="hold" id="hold" ${s==='U'?'disabled':''} aria-label="Press and hold to log"><svg viewBox="0 0 148 148"><circle cx="74" cy="74" r="68" fill="none" stroke="var(--line)" stroke-width="6"/><circle id="hp" cx="74" cy="74" r="68" fill="none" stroke="var(--ink)" stroke-width="6" pathLength="100" stroke-dasharray="100" stroke-dashoffset="100" transform="rotate(-90 74 74)"/></svg><span>HOLD</span></button>${more}</div>`;
@@ -452,6 +456,7 @@ function setHtml(now,today){const w=win(today),th=S.cfg.theme||'auto';
   return`<div class="in" style="justify-content:flex-start;gap:28px;height:auto;min-height:100%"><div class="top"><span class="lab">SETTINGS</span><button data-act="setx" style="min-height:44px;font-size:11px;letter-spacing:3px;color:var(--mute)">CLOSE</button></div>
   <div class="col" style="gap:10px"><div class="lab">THEME</div><div class="seg">${['auto','light','dark'].map(t=>`<button data-th="${t}" class="${th===t?'on':''}">${t.toUpperCase()}</button>`).join('')}</div></div>
   <div class="col" style="gap:6px"><div class="lab">PRAYER TIMES · KARACHI · HANAFI</div>${P.map(p=>`<div class="adj"><b>${NM[p]}</b><button data-off="${p}" data-d="-1" aria-label="Earlier">−</button><span>${clock(w[p][0])}</span><button data-off="${p}" data-d="1" aria-label="Later">+</button></div>`).join('')}</div>
+  <div class="col" style="gap:6px"><div class="lab">JAMAAT TIMES</div>${P.slice(1).map(p=>`<div class="adj"><b>${NM[p]}</b><button data-jam="${p}" data-d="-5" aria-label="Earlier">−</button><span>${clock(jam(today,p))}</span><button data-jam="${p}" data-d="5" aria-label="Later">+</button></div>`).join('')}</div>
   <div style="font-size:11px;letter-spacing:1px;color:var(--dim)">${S.api?(S.q.length?'SYNC PENDING · '+S.q.length:'SYNCED'):'SAVED ON THIS PHONE ONLY'}</div></div>`}
 function applyTheme(){const t=S.cfg.theme||'auto';if(t==='auto')document.documentElement.removeAttribute('data-theme');else document.documentElement.setAttribute('data-theme',t);
   const m=document.querySelector('meta[name=theme-color]');m&&m.setAttribute('content',getComputedStyle(document.documentElement).getPropertyValue('--bg').trim()||'#000')}
@@ -477,12 +482,13 @@ function holdStart(e){const b=e.target.closest('#hold');if(!b||b.disabled)return
 function holdEnd(){if(!holding)return;cancelAnimationFrame(hraf);holding=false;const b=$('#hold');if(b){b.classList.remove('dn');$('#hp').setAttribute('stroke-dashoffset','100')}}
 document.addEventListener('pointerdown',holdStart);['pointerup','pointercancel','pointerleave'].forEach(ev=>document.addEventListener(ev,holdEnd));
 document.addEventListener('contextmenu',e=>e.preventDefault());
-document.addEventListener('click',e=>{const t=e.target.closest('[data-act],[data-sel],[data-ch],[data-undo],[data-day],[data-th],[data-off]');if(!t)return;const d=t.dataset,now=now_(),today=dayKey(now);
+document.addEventListener('click',e=>{const t=e.target.closest('[data-act],[data-sel],[data-ch],[data-undo],[data-day],[data-th],[data-off],[data-jam]');if(!t)return;const d=t.dataset,now=now_(),today=dayKey(now);
   if(d.ch)return choose(d.ch);
   if(d.undo)return undo(d.undo);
   if(d.sel){if(choice)return;sel=sel===d.sel&&!forceRing?null:d.sel;if(st(today,d.sel,now)==='U'&&!rec(today,d.sel))sel=null;forceRing=!!sel&&(!!rec(today,'isha')||now>=win(today).recapAt);$('#v').scrollTo({top:0,behavior:'smooth'});return render()}
   if(d.day){if(d.day===recapDay&&!recapWeek)return;return fadeThen('.pgp .rb','recap',()=>{recapDay=d.day;recapWeek=false})}
   if(d.th){S.cfg.theme=d.th;persist();applyTheme();return render()}
+  if(d.jam){const{y,m,d:dd}=parts(today),base=Date.UTC(y,m-1,dd)-TZ*H;S.cfg.jam=S.cfg.jam||{};S.cfg.jam[d.jam]=Math.round((jam(today,d.jam)-base)/6e4)+Number(d.d);persist();return render()}
   if(d.off){S.cfg.off[d.off]=(S.cfg.off[d.off]||0)+Number(d.d);wc={};persist();return render()}
   const a=d.act;
   if(a==='down')$('#v').scrollTo({top:$('#stats').offsetTop,behavior:'smooth'});
